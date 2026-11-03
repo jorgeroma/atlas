@@ -1,0 +1,2056 @@
+<!doctype html>
+<html lang="es" data-atlas-routing>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Proyecto DevOps de punta a punta</title>
+<script src="../atlas.js"></script>
+<meta name="description" content="Proyecto guiado para el portfolio: app, Docker, CI, Kubernetes, Terraform, GitOps, seguridad, observabilidad y fiabilidad. Tareas, spoilers opcionales y presupuesto de horas.">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+/* Layout copied from the Terraform guide: sticky rail + one reading column, one phase per view.
+   Each phase = tasks (checkboxes) + "done when" + scope traps + optional spoilers + hours log. */
+:root{
+  --paper:#F2F3F7; --surface:#FFFFFF; --sunk:#E6E8F0; --ink:#161A2B; --muted:#585E73; --line:#D5D8E3;
+  --accent:#3B4FB8; --accent-ink:#FFFFFF; --accent-soft:#E3E7FA;
+  --ochre:#94600F; --ochre-soft:#F5EAD4;
+  --add:#1B7A43; --del:#B3362F;
+  --code-bg:#11131C; --code-fg:#D7DBEA; --code-muted:#7D839C; --code-line:#262A3A;
+  --code-kw:#9DB0FF; --code-str:#E8BF78; --code-attr:#8FD3C8;
+  --term-add:#5DD39A; --term-read:#9DB0FF;
+  --shadow:0 1px 2px rgb(20 24 50 / .05), 0 10px 28px rgb(20 24 50 / .07);
+  --f-display:"Bricolage Grotesque","Avenir Next","Segoe UI",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans","Segoe UI",system-ui,-apple-system,sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0D0F17; --surface:#141724; --sunk:#1B1F2E; --ink:#E3E6F2; --muted:#9AA0B8; --line:#282C3D;
+    --accent:#8FA0F5; --accent-ink:#0B1030; --accent-soft:#1B2140;
+    --ochre:#E3A74C; --ochre-soft:#2C2313;
+    --add:#57C98A; --del:#F0736A;
+    --code-bg:#090A10; --code-line:#1F2231;
+    --shadow:0 1px 2px rgb(0 0 0 / .3);
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0D0F17; --surface:#141724; --sunk:#1B1F2E; --ink:#E3E6F2; --muted:#9AA0B8; --line:#282C3D;
+  --accent:#8FA0F5; --accent-ink:#0B1030; --accent-soft:#1B2140;
+  --ochre:#E3A74C; --ochre-soft:#2C2313;
+  --add:#57C98A; --del:#F0736A;
+  --code-bg:#090A10; --code-line:#1F2231;
+  --shadow:0 1px 2px rgb(0 0 0 / .3);
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:20px}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased}
+a{color:var(--accent);text-underline-offset:3px}
+a:hover{text-decoration-thickness:2px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+code{font-family:var(--f-mono);font-size:.86em;background:var(--sunk);padding:.1em .38em;border-radius:4px}
+strong{font-weight:600}
+
+.shell{display:grid;grid-template-columns:250px minmax(0,1fr);gap:56px;max-width:1200px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:32px 96px}
+.rail{position:sticky;top:calc(env(safe-area-inset-top,0px) + 20px);align-self:start;max-height:calc(100vh - 40px);overflow:auto;font-size:14px;padding-right:4px}
+main{min-width:0;max-width:790px}
+@media (max-width:980px){
+  .shell{grid-template-columns:minmax(0,1fr);gap:20px;padding-block:20px 72px}
+  .rail{position:static;max-height:none;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:14px}
+}
+
+/* rail */
+.brand{display:flex;align-items:center;gap:10px;font:700 1rem/1.2 var(--f-display);margin-bottom:16px}
+.theme-slot{margin-left:auto}
+.brand-mark{display:grid;place-items:center;flex:none;width:30px;height:30px;border-radius:7px;background:var(--ink);color:var(--paper);font:700 11px/1 var(--f-mono)}
+.prog-bar{height:6px;background:var(--sunk);border-radius:99px;overflow:hidden}
+.prog-bar span{display:block;height:100%;width:0;background:var(--accent);transition:width .4s ease}
+#prog-txt{font:500 .74rem/1.4 var(--f-mono);color:var(--muted);display:block;margin:6px 0 14px}
+.toc summary{font:600 .72rem/1 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);cursor:pointer;padding:6px 0;list-style-position:inside}
+.toc ol{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:1px}
+.toc a{display:grid;grid-template-columns:24px minmax(0,1fr) 10px;gap:6px;align-items:baseline;padding:6px 8px;border-radius:6px;color:var(--ink);text-decoration:none;line-height:1.35}
+.toc a .n{font:500 .7rem/1 var(--f-mono);color:var(--muted)}
+.toc a:hover{background:var(--sunk)}
+.toc a.is-current{background:var(--accent-soft);color:var(--accent)}
+.toc a::after{content:"";width:8px;height:8px;border-radius:50%;border:1.5px solid var(--line);align-self:center}
+.toc a.is-done::after{background:var(--add);border-color:var(--add)}
+.toc .sep{height:1px;background:var(--line);margin:8px 0}
+
+/* hero */
+.hero{padding-block:4px 40px;margin-bottom:8px}
+.kicker{font:600 .74rem/1 var(--f-mono);letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin:0 0 16px}
+.hero h1{font-family:var(--f-display);font-weight:800;font-size:clamp(2.5rem,6.4vw,4.3rem);line-height:.98;letter-spacing:-.025em;margin:0 0 18px;text-wrap:balance}
+.hero h1 span{color:var(--accent)}
+.hero .sub{font-size:1.12rem;color:var(--muted);max-width:58ch;margin:0 0 24px}
+.hero h3{font-family:var(--f-display);font-weight:700;font-size:1.32rem;line-height:1.2;margin:44px 0 10px}
+.hero-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:24px;align-items:start}
+@media (max-width:760px){.hero-grid{grid-template-columns:minmax(0,1fr)}}
+.facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:0 0 22px}
+.fact{border-top:2px solid var(--ink);padding-top:8px}
+.fact b{font-family:var(--f-display);font-weight:700;font-size:1.7rem;display:block;line-height:1.1}
+.fact span{font:500 .7rem/1.3 var(--f-mono);color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+
+/* terminal & code */
+.term{background:var(--code-bg);color:var(--code-fg);border-radius:10px;overflow:hidden;font-family:var(--f-mono);font-size:12.5px;line-height:1.55;min-width:0}
+.term-bar{display:flex;align-items:center;gap:6px;padding:8px 12px;border-bottom:1px solid var(--code-line);color:var(--code-muted);font-size:11.5px}
+.term-bar i{width:9px;height:9px;border-radius:50%;background:var(--code-line);display:inline-block}
+.term-bar i:last-of-type{margin-right:6px}
+.term-out{margin:0;padding:12px 14px;white-space:pre;overflow:auto;min-height:300px}
+.codebox{margin:14px 0;border-radius:10px;overflow:hidden;background:var(--code-bg);min-width:0}
+.codebox figcaption{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 8px 6px 14px;font:500 11.5px/1 var(--f-mono);color:var(--code-muted);border-bottom:1px solid var(--code-line)}
+.copy{font:inherit;color:var(--code-fg);background:transparent;border:1px solid var(--code-line);border-radius:6px;padding:5px 9px;cursor:pointer}
+.copy:hover{border-color:var(--code-muted)}
+pre.code{margin:0;padding:14px 16px;overflow-x:auto;font:400 13px/1.6 var(--f-mono);color:var(--code-fg);tab-size:2}
+pre.code code{background:none;padding:0;border-radius:0;font:inherit;color:inherit}
+.t-c{color:var(--code-muted);font-style:italic}.t-s{color:var(--code-str)}.t-k{color:var(--code-kw)}.t-a{color:var(--code-attr)}
+.t-p,.t-cmd{color:var(--code-kw);font-weight:500}.t-add{color:var(--term-add)}.t-read{color:var(--term-read)}.t-b{color:#fff;font-weight:700}
+
+/* blocks */
+.block{padding-block:4px 24px}
+.pager{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:48px;padding-top:24px;border-top:1px solid var(--line)}
+.pager a{display:block;border:1px solid var(--line);border-radius:10px;padding:14px 16px;text-decoration:none;color:var(--ink);background:var(--surface);font:700 1rem/1.3 var(--f-display);min-width:0}
+.pager a:hover{border-color:var(--accent);color:var(--accent)}
+.pager a small{display:block;font:600 .7rem/1.2 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.pager .next{grid-column:2;text-align:right}
+@media (max-width:560px){.pager{grid-template-columns:minmax(0,1fr)}.pager .next{grid-column:1}}
+.eyebrow{font:600 .74rem/1.3 var(--f-mono);letter-spacing:.08em;text-transform:uppercase;color:var(--accent);margin:0 0 12px}
+.block h2{font-family:var(--f-display);font-weight:700;font-size:clamp(1.75rem,3.6vw,2.45rem);line-height:1.08;letter-spacing:-.018em;margin:0 0 14px;text-wrap:balance}
+.block h3{font-family:var(--f-display);font-weight:700;font-size:1.32rem;line-height:1.2;margin:44px 0 10px;text-wrap:balance}
+.block h4{font-family:var(--f-display);font-weight:700;font-size:1.05rem;margin:26px 0 6px}
+.lead{font-size:1.1rem;color:var(--muted)}
+p,li{max-width:68ch}
+ul,ol{padding-left:22px}
+li{margin:4px 0}
+.goals{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin-top:20px}
+.goals strong{font:600 .72rem/1 var(--f-mono);text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.goals ul{margin:8px 0 0}
+.note{background:var(--accent-soft);padding:14px 18px;border-radius:10px;margin:22px 0}
+.note.warn{background:var(--ochre-soft)}
+.note.ok{background:color-mix(in srgb,var(--add) 12%,var(--surface))}
+.note .lbl{display:block;font:700 .7rem/1 var(--f-mono);letter-spacing:.09em;text-transform:uppercase;color:var(--accent);margin-bottom:6px}
+.note.warn .lbl{color:var(--ochre)}
+.note.ok .lbl{color:var(--add)}
+.note p{margin:0}.note p+p{margin-top:8px}
+.note ul{margin:6px 0 0}
+.tbl-wrap{overflow-x:auto;margin:20px 0;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:.92rem}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:600 .7rem/1.3 var(--f-mono);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);background:var(--sunk)}
+tbody tr:last-child td{border-bottom:0}
+tfoot td{border-top:1px solid var(--line);border-bottom:0;font-weight:600}
+td code{white-space:nowrap}
+.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tree{font:13px/1.55 var(--f-mono);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;overflow-x:auto;white-space:pre;margin:18px 0}
+.tree .t-c{color:var(--muted)}
+.cap{font:500 .75rem/1.4 var(--f-mono);color:var(--muted);margin:6px 0 0}
+.diagram{margin:22px 0 8px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;overflow-x:auto}
+.diagram svg{display:block;width:100%;min-width:640px;height:auto}
+.dg-box{fill:var(--paper);stroke:var(--line);stroke-width:1.5}
+.dg-core{fill:var(--accent-soft);stroke:var(--accent);stroke-width:1.5}
+.dg-zone{fill:none;stroke:var(--muted);stroke-width:1.2;stroke-dasharray:6 5}
+.dg-t{fill:var(--ink);font:600 13px var(--f-body)}
+.dg-s{fill:var(--muted);font:11px var(--f-mono)}
+.dg-line{fill:none;stroke:var(--accent);stroke-width:1.6;stroke-dasharray:5 5;animation:flow 1.2s linear infinite}
+.dg-line.slow{stroke:var(--muted);animation-duration:2.4s}
+.dg-arrow{fill:var(--accent)}
+@keyframes flow{to{stroke-dashoffset:-20}}
+.rules{counter-reset:r;list-style:none;padding:0}
+.rules li{counter-increment:r;position:relative;padding-left:40px;margin:14px 0}
+.rules li::before{content:counter(r,decimal-leading-zero);position:absolute;left:0;top:1px;font:700 .8rem/1.6 var(--f-mono);color:var(--accent)}
+
+/* tasks & spoilers */
+.task{border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:12px 14px;margin:10px 0}
+.chk{display:flex;gap:10px;align-items:flex-start;font-weight:600;cursor:pointer;line-height:1.45}
+.chk input{margin-top:3px;width:17px;height:17px;flex:none;accent-color:var(--accent)}
+.chk:has(input:checked) span{text-decoration:line-through;text-decoration-color:var(--muted);color:var(--muted)}
+.task>p,.task>ul{margin:6px 0 0 27px;font-size:.94rem}
+.task>ul{padding-left:18px}
+details.spoil{margin:8px 0 0 27px;border:1px solid var(--line);border-radius:8px;background:var(--paper);padding:0 12px}
+details.spoil summary{cursor:pointer;font:600 .76rem/1 var(--f-mono);color:var(--ochre);padding:10px 0}
+details.spoil[open]{padding-bottom:10px}
+details.spoil p{margin:6px 0;font-size:.93rem}
+details.spoil ul{font-size:.93rem}
+details.qa{border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:0 14px;margin:8px 0}
+details.qa summary{cursor:pointer;font-weight:600;padding:11px 0}
+details.qa[open]{padding-bottom:12px}
+details.qa p{margin:4px 0;font-size:.94rem}
+@media (max-width:560px){.task>p,.task>ul,details.spoil{margin-left:0}}
+
+/* hours */
+.hours{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin-top:32px;padding:12px 14px;border:1.5px dashed var(--line);border-radius:10px}
+.hours label{font:600 .8rem/1.3 var(--f-mono);color:var(--muted);display:flex;align-items:center;gap:8px}
+.hours input{font:15px var(--f-mono);width:84px;padding:6px 8px;border:1px solid var(--line);border-radius:7px;background:var(--paper);color:var(--ink)}
+.h-msg{margin:0;font-size:.9rem;flex:1 1 260px}
+.hours.near{border-color:var(--ochre)}
+.hours.over{border-color:var(--del);border-style:solid}
+.hours.over .h-msg{color:var(--del);font-weight:600}
+.pill{display:inline-block;font:600 .72rem/1 var(--f-mono);padding:4px 7px;border-radius:99px;background:var(--sunk);color:var(--muted);white-space:nowrap}
+.pill.ok{background:color-mix(in srgb,var(--add) 15%,transparent);color:var(--add)}
+.pill.near{background:var(--ochre-soft);color:var(--ochre)}
+.pill.over{background:color-mix(in srgb,var(--del) 14%,transparent);color:var(--del)}
+
+/* resources */
+.res-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:16px 0}
+@media (max-width:640px){.res-grid{grid-template-columns:minmax(0,1fr)}}
+.rcard{border:1px solid var(--line);border-radius:10px;padding:14px 16px;background:var(--surface);min-width:0}
+.rcard h4{margin:0 0 8px}
+.rcard ul{list-style:none;padding:0;margin:0}
+.rcard li{margin:8px 0;font-size:.92rem;line-height:1.45}
+.rcard li a{font-weight:600}
+.rcard li span{display:block;color:var(--muted);font-size:.85rem}
+.cheat td:first-child{font-family:var(--f-mono);font-size:.82rem;white-space:nowrap}
+dl.gloss{display:grid;grid-template-columns:minmax(0,170px) minmax(0,1fr);gap:8px 18px;margin:16px 0}
+dl.gloss dt{font:700 .85rem/1.5 var(--f-mono);color:var(--accent)}
+dl.gloss dd{margin:0;font-size:.94rem}
+@media (max-width:560px){dl.gloss{grid-template-columns:minmax(0,1fr)}dl.gloss dd{margin-bottom:8px}}
+footer.end{color:var(--muted);font-size:.85rem;padding-top:8px}
+
+@media (max-width:640px){
+  .hours input{font-size:16px}
+  .facts{gap:10px}
+  .fact b{font-size:1.4rem}
+  .term-out{min-height:240px}
+}
+@media (prefers-reduced-motion: reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+<aside class="rail" aria-label="Índice del proyecto">
+  <div class="brand"><span class="brand-mark">ops</span>Proyecto DevOps<span class="theme-slot" data-atlas-theme></span></div>
+  <div class="prog-bar" aria-hidden="true"><span id="prog-fill"></span></div>
+  <span id="prog-txt">0 / 0 tareas completadas</span>
+  <details class="toc" id="toc" open>
+    <summary>Índice</summary>
+    <ol>
+      <li><a href="#ruta"><span class="n">··</span>Ruta y presupuesto</a></li>
+      <li><a href="#b-plan"><span class="n">00</span>Reglas del juego y alcance</a></li>
+      <li><a href="#b-app"><span class="n">01</span>La aplicación mínima</a></li>
+      <li><a href="#b-docker"><span class="n">02</span>Contenedores</a></li>
+      <li><a href="#b-ci"><span class="n">03</span>Integración continua</a></li>
+      <li><a href="#b-k8s"><span class="n">04</span>Kubernetes en local y Helm</a></li>
+      <li><a href="#b-infra"><span class="n">05</span>Nube con Terraform</a></li>
+      <li><a href="#b-gitops"><span class="n">06</span>Despliegue con GitOps</a></li>
+      <li><a href="#b-sec"><span class="n">07</span>Secretos y seguridad</a></li>
+      <li><a href="#b-obs"><span class="n">08</span>Observabilidad</a></li>
+      <li><a href="#b-rel"><span class="n">09</span>Fiabilidad y operación</a></li>
+      <li><a href="#b-cv"><span class="n">10</span>Portfolio y CV</a></li>
+      <li class="sep" aria-hidden="true"></li>
+      <li><a href="#b-ref"><span class="n">+</span>Recursos, chuleta y glosario</a></li>
+    </ol>
+  </details>
+</aside>
+
+<main>
+<!-- ============ RUTA ============ -->
+<header class="hero" id="ruta">
+  <p class="kicker">Proyecto guiado · 11 fases · de punta a punta</p>
+  <h1>Proyecto DevOps <span>de punta a punta</span> para tu portfolio</h1>
+  <p class="sub">Vas a construir, desplegar y operar un servicio real: código, contenedores, pipeline, Kubernetes, infraestructura en la nube, GitOps, seguridad, métricas, alertas, backups y un postmortem. Cada fase te dice qué hacer y cuándo está terminada; los consejos van escondidos como spoilers para que lo resuelvas tú primero.</p>
+  <div class="hero-grid">
+    <div>
+      <div class="facts">
+        <div class="fact"><b>11</b><span>fases</span></div>
+        <div class="fact"><b>~80 h</b><span>estimadas</span></div>
+        <div class="fact"><b>8</b><span>semanas a 10 h</span></div>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>Semana</th><th>Fases</th><th>Hito</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td>00–01</td><td>Alcance escrito y app funcionando en local</td></tr>
+            <tr><td>2</td><td>02–03</td><td><code>make up</code> en limpio y pipeline que publica la imagen</td></tr>
+            <tr><td>3–4</td><td>04</td><td>Todo en Kubernetes local con Helm, sin cortes al actualizar</td></tr>
+            <tr><td>5</td><td>05</td><td>Cluster en AWS creado y destruido con un comando</td></tr>
+            <tr><td>6</td><td>06–07</td><td>Merge → dev automático, prod por PR, cero secretos en git</td></tr>
+            <tr><td>7</td><td>08</td><td>Dashboard y alerta que llega al móvil</td></tr>
+            <tr><td>8</td><td>09–10</td><td>Cifras de carga y backup, postmortem, README y vídeo</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="cap">Si es tu primera vez con Kubernetes, cuenta con 100–120 h. Es normal: el registro de horas te dirá dónde se te va el tiempo.</p>
+    </div>
+    <div class="term" aria-label="Ejemplo animado: un push pasa por el pipeline y llega al cluster">
+      <div class="term-bar"><i></i><i></i><i></i>~/vigia</div>
+      <pre class="term-out" id="hero-term"></pre>
+    </div>
+  </div>
+
+  <h3>Qué vas a construir: Vigía</h3>
+  <p><strong>Vigía</strong> es un monitor de disponibilidad: registras URLs y un worker las comprueba cada cierto tiempo, guardando el código de estado y la latencia. La app es deliberadamente pequeña, porque <strong>la app es la excusa</strong>: lo que enseñas en el portfolio es cómo se construye, se despliega, se vigila y se recupera. Y tiene justo lo que hace interesante la operación: una API, un proceso en segundo plano, una base de datos con estado y tráfico saliente a internet.</p>
+  <div class="diagram" role="img" aria-label="Arquitectura: el push pasa por GitHub Actions, que publica la imagen en GHCR y actualiza el repo de despliegue; Argo CD, dentro de un cluster k3s en EC2 creado con Terraform, sincroniza la API, el worker y Postgres; Prometheus vigila y Alertmanager avisa por Discord">
+    <svg viewBox="0 0 880 400">
+      <defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="dg-arrow" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+      <rect class="dg-box" x="10" y="30" width="120" height="56" rx="10"/>
+      <text class="dg-t" x="70" y="54" text-anchor="middle">Tú</text>
+      <text class="dg-s" x="70" y="72" text-anchor="middle">push · PR</text>
+      <rect class="dg-core" x="170" y="30" width="200" height="56" rx="10"/>
+      <text class="dg-t" x="270" y="54" text-anchor="middle">GitHub Actions</text>
+      <text class="dg-s" x="270" y="72" text-anchor="middle">lint · test · build · scan</text>
+      <rect class="dg-box" x="410" y="30" width="130" height="56" rx="10"/>
+      <text class="dg-t" x="475" y="54" text-anchor="middle">GHCR</text>
+      <text class="dg-s" x="475" y="72" text-anchor="middle">vigia:sha-3f9c2e1</text>
+      <rect class="dg-box" x="590" y="30" width="150" height="56" rx="10"/>
+      <text class="dg-t" x="665" y="54" text-anchor="middle">vigia-deploy</text>
+      <text class="dg-s" x="665" y="72" text-anchor="middle">chart + values</text>
+
+      <rect class="dg-zone" x="170" y="140" width="590" height="248" rx="14"/>
+      <text class="dg-s" x="186" y="161">EC2 + k3s · creado con Terraform</text>
+      <rect class="dg-box" x="10" y="175" width="120" height="50" rx="10"/>
+      <text class="dg-t" x="70" y="196" text-anchor="middle">Usuarios</text>
+      <text class="dg-s" x="70" y="213" text-anchor="middle">HTTPS</text>
+      <rect class="dg-box" x="195" y="175" width="140" height="50" rx="10"/>
+      <text class="dg-t" x="265" y="196" text-anchor="middle">Traefik</text>
+      <text class="dg-s" x="265" y="213" text-anchor="middle">ingress + TLS</text>
+      <rect class="dg-box" x="195" y="260" width="140" height="50" rx="10"/>
+      <text class="dg-t" x="265" y="281" text-anchor="middle">cert-manager</text>
+      <text class="dg-s" x="265" y="298" text-anchor="middle">Sealed Secrets</text>
+      <rect class="dg-core" x="400" y="175" width="140" height="50" rx="10"/>
+      <text class="dg-t" x="470" y="196" text-anchor="middle">api ×2</text>
+      <text class="dg-s" x="470" y="213" text-anchor="middle">FastAPI</text>
+      <rect class="dg-core" x="400" y="245" width="140" height="50" rx="10"/>
+      <text class="dg-t" x="470" y="266" text-anchor="middle">worker</text>
+      <text class="dg-s" x="470" y="283" text-anchor="middle">checks HTTP</text>
+      <rect class="dg-box" x="400" y="315" width="140" height="50" rx="10"/>
+      <text class="dg-t" x="470" y="336" text-anchor="middle">Postgres</text>
+      <text class="dg-s" x="470" y="353" text-anchor="middle">StatefulSet + PVC</text>
+      <rect class="dg-box" x="600" y="175" width="130" height="50" rx="10"/>
+      <text class="dg-t" x="665" y="196" text-anchor="middle">Argo CD</text>
+      <text class="dg-s" x="665" y="213" text-anchor="middle">pull + sync</text>
+      <rect class="dg-box" x="600" y="245" width="130" height="50" rx="10"/>
+      <text class="dg-t" x="665" y="266" text-anchor="middle">Prometheus</text>
+      <text class="dg-s" x="665" y="283" text-anchor="middle">+ Grafana</text>
+      <rect class="dg-box" x="600" y="315" width="130" height="50" rx="10"/>
+      <text class="dg-t" x="665" y="336" text-anchor="middle">Alertmanager</text>
+      <text class="dg-s" x="665" y="353" text-anchor="middle">reglas SLO</text>
+      <rect class="dg-box" x="775" y="315" width="95" height="50" rx="10"/>
+      <text class="dg-t" x="822" y="336" text-anchor="middle">Discord</text>
+      <text class="dg-s" x="822" y="353" text-anchor="middle">tu móvil</text>
+
+      <path class="dg-line" d="M130,58 L166,58" marker-end="url(#arr)"/>
+      <path class="dg-line" d="M370,58 L406,58" marker-end="url(#arr)"/>
+      <path class="dg-line" d="M330,30 C380,0 560,0 610,26" marker-end="url(#arr)"/>
+      <path class="dg-line slow" d="M475,86 L475,171" marker-end="url(#arr)"/>
+      <path class="dg-line slow" d="M665,86 L665,171" marker-end="url(#arr)"/>
+      <path class="dg-line" d="M600,200 L544,200" marker-end="url(#arr)"/>
+      <path class="dg-line" d="M130,200 L191,200" marker-end="url(#arr)"/>
+      <path class="dg-line" d="M335,200 L396,200" marker-end="url(#arr)"/>
+      <path class="dg-line slow" d="M400,215 C380,215 380,340 396,340" marker-end="url(#arr)"/>
+      <path class="dg-line slow" d="M470,295 L470,311" marker-end="url(#arr)"/>
+      <path class="dg-line slow" d="M600,270 L544,270" marker-end="url(#arr)"/>
+      <path class="dg-line" d="M665,295 L665,311" marker-end="url(#arr)"/>
+      <path class="dg-line" d="M730,340 L771,340" marker-end="url(#arr)"/>
+    </svg>
+  </div>
+  <p class="cap">El pipeline publica la imagen y escribe el nuevo tag en el repo de despliegue; Argo CD, desde dentro del cluster, lo lee y sincroniza. Nadie hace <code>kubectl apply</code> a mano.</p>
+
+  <h3>Cómo usar esta guía</h3>
+  <ul>
+    <li><strong>Qué debes hacer:</strong> tareas con casilla. Se guardan en este navegador y alimentan el progreso.</li>
+    <li><strong>Hecho cuando:</strong> el criterio que cierra la fase. Cuando se cumple, paras y avanzas.</li>
+    <li><strong>Trampas:</strong> lo que parece buena idea y te comería el tiempo. Lee esto antes de empezar cada fase.</li>
+    <li><strong>Spoilers:</strong> pistas y soluciones orientativas. Ábrelos solo después de 30 minutos atascado.</li>
+    <li><strong>Preguntas de entrevista:</strong> lo que podrás responder con soltura al terminar la fase.</li>
+    <li><strong>Horas dedicadas:</strong> apúntalas al final de cada sesión. La tabla de abajo compara lo real con lo estimado.</li>
+  </ul>
+
+  <h3>Presupuesto de tiempo</h3>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Fase</th><th class="num">Estimado</th><th class="num">Real</th><th>Estado</th></tr></thead>
+      <tbody id="budget"></tbody>
+      <tfoot><tr><td>Total</td><td class="num" id="budget-est"></td><td class="num" id="budget-real"></td><td id="budget-state"></td></tr></tfoot>
+    </table>
+  </div>
+  <p class="cap">Ajustado = entre 1× y 1,5× lo estimado. Pasado = más de 1,5×: es la señal para recortar alcance.</p>
+</header>
+
+<!-- ============ 00 ============ -->
+<section class="block" id="b-plan" data-track data-est="3">
+  <p class="eyebrow">Fase 00 · Planificación · ~3 h</p>
+  <h2>Reglas del juego: alcance, plan y cómo no sobredesarrollar</h2>
+  <p class="lead">El mayor riesgo de este proyecto no es técnico: es pasarte tres semanas puliendo el Dockerfile y no llegar nunca a producción. Esta fase fija qué haces, qué no haces y cómo vas a frenarte.</p>
+  <div class="goals"><strong>Al terminar tendrás</strong>
+    <ul>
+      <li>Un repositorio público con README esqueleto y el alcance escrito.</li>
+      <li>Una lista explícita de lo que <em>no</em> vas a construir.</li>
+      <li>Un sistema para aparcar ideas sin implementarlas.</li>
+      <li>Tu primera decisión de arquitectura documentada (ADR).</li>
+    </ul>
+  </div>
+
+  <h3>La app, en una página</h3>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Endpoint</th><th>Qué hace</th></tr></thead>
+      <tbody>
+        <tr><td><code>POST /monitors</code></td><td>Crea un monitor: <code>{url, interval_seconds}</code>. Requiere cabecera <code>X-API-Key</code>.</td></tr>
+        <tr><td><code>GET /monitors</code></td><td>Lista los monitores con su último estado.</td></tr>
+        <tr><td><code>DELETE /monitors/{id}</code></td><td>Borra un monitor y sus checks. Requiere API key.</td></tr>
+        <tr><td><code>GET /monitors/{id}/checks</code></td><td>Últimos N checks: código, latencia, ok, fecha.</td></tr>
+        <tr><td><code>GET /healthz</code>, <code>/readyz</code>, <code>/metrics</code></td><td>Para Kubernetes y Prometheus, no para usuarios.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Más un <strong>worker</strong> que cada pocos segundos reclama los monitores que tocan, hace un GET con timeout y guarda el resultado. Dos tablas: <code>monitors</code> y <code>checks</code>. Eso es todo.</p>
+
+  <h3>El stack, y por qué</h3>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Pieza</th><th>Elección</th><th>Por qué</th><th>Alternativa válida</th></tr></thead>
+      <tbody>
+        <tr><td>Lenguaje</td><td>Python + FastAPI</td><td>Rápido de escribir; la app no es el foco</td><td>Go (imágenes diminutas), TypeScript</td></tr>
+        <tr><td>Base de datos</td><td>PostgreSQL</td><td>La estándar; también hace de cola</td><td>—</td></tr>
+        <tr><td>CI</td><td>GitHub Actions + GHCR</td><td>Gratis en repos públicos, visible para reclutadores</td><td>GitLab CI</td></tr>
+        <tr><td>Kubernetes</td><td>k3d en local, k3s en la nube</td><td>El mismo k3s en ambos sitios, barato, trae Traefik</td><td>EKS (caro para una demo)</td></tr>
+        <tr><td>Empaquetado</td><td>Helm</td><td>El que más piden las ofertas</td><td>Kustomize</td></tr>
+        <tr><td>Infraestructura</td><td>Terraform en AWS</td><td>Ya lo conoces del <a href="terraform-desde-cero.html">atlas de Terraform</a></td><td>Hetzner (más barato), OpenTofu</td></tr>
+        <tr><td>Despliegue</td><td>Argo CD (GitOps)</td><td>Estándar de facto, muy visual para la demo</td><td>Flux</td></tr>
+        <tr><td>Secretos</td><td>Sealed Secrets</td><td>Simple, sin dependencias de la nube</td><td>External Secrets + SSM</td></tr>
+        <tr><td>Observabilidad</td><td>kube-prometheus-stack</td><td>Prometheus, Grafana y Alertmanager en un chart</td><td>Grafana Cloud (gratis con límites)</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Dos repositorios: <code>vigia</code> (código, Dockerfile, CI, Terraform) y <code>vigia-deploy</code> (chart de Helm y values por entorno). Dev y prod serán dos <em>namespaces</em> del mismo cluster: basta para demostrar promoción entre entornos. En una empresa serían clusters o cuentas separadas; dilo en un ADR y ya has demostrado que lo sabes.</p>
+
+  <h3>Cómo no sobredesarrollar</h3>
+  <ol class="rules">
+    <li><strong>El “Hecho cuando” manda.</strong> Cada fase tiene un criterio de cierre. Cuando se cumple, paras. Pulir es una fase futura que casi nunca llega, y está bien que no llegue.</li>
+    <li><strong>Presupuesto de horas.</strong> Apunta lo que dedicas. Al llegar a lo estimado, revisa qué falta para el “Hecho cuando”. Al llegar a 1,5×, recorta alcance y avanza sin discutir contigo mismo.</li>
+    <li><strong>IDEAS.md es el aparcamiento.</strong> Cada idea brillante (“¿y si añado Redis?”, “¿y si lo hago multi-región?”) va a ese fichero, no al código. Al final será la sección <em>Roadmap</em> del README, y eso también suma: demuestra criterio para priorizar.</li>
+    <li><strong>Punta a punta antes que profundo.</strong> Una versión fea que llega a producción vale más que una perfecta en tu portátil. Siempre puedes volver a mejorar una pieza que ya funciona.</li>
+    <li><strong>La app es una excusa.</strong> Si te pillas añadiendo funcionalidades de producto (usuarios, gráficas, emails), estás en el proyecto equivocado.</li>
+    <li><strong>Regla de tres.</strong> No crees un módulo, plantilla o workflow reutilizable hasta haber repetido lo mismo tres veces.</li>
+    <li><strong>Tecnología aburrida.</strong> Una herramienta por problema, la que más aparece en las ofertas. Nada de service mesh, multi-nube ni microservicios.</li>
+    <li><strong>La pregunta filtro:</strong> “¿qué pregunta de entrevista me permite responder esto?”. Si no se te ocurre ninguna, es pulido.</li>
+    <li><strong>Sesiones con objetivo.</strong> Empieza escribiendo en una línea qué vas a cerrar hoy. Termina con un commit y una nota del siguiente paso: retomar te costará dos minutos en vez de veinte.</li>
+  </ol>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Área</th><th>Suficiente</th><th>Sobredesarrollo</th></tr></thead>
+      <tbody>
+        <tr><td>App</td><td>5 endpoints, 2 tablas, tests de lo crítico</td><td>Usuarios, UI, 100 % de cobertura</td></tr>
+        <tr><td>Docker</td><td>Multi-stage, no root, imagen razonable</td><td>Horas para ahorrar 10 MB</td></tr>
+        <tr><td>CI</td><td>Un workflow de ~5 min</td><td>Matrices, workflows reutilizables, runners propios</td></tr>
+        <tr><td>Kubernetes</td><td>Un chart, un values por entorno</td><td>Chart genérico “para cualquier app”, operador propio</td></tr>
+        <tr><td>Terraform</td><td>Una raíz, ~12 recursos</td><td>Módulos para todo, Terragrunt, multi-cuenta</td></tr>
+        <tr><td>GitOps</td><td>Dos Applications</td><td>ApplicationSets, app-of-apps</td></tr>
+        <tr><td>Observabilidad</td><td>Un dashboard, 2–3 alertas con acción</td><td>Diez dashboards, alertas de CPU que nadie atiende</td></tr>
+        <tr><td>Seguridad</td><td>Sin secretos en git, OIDC, no root, SSRF</td><td>Vault, mTLS, políticas OPA a medida</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Cómo aprender sin IA</h3>
+  <ul>
+    <li><strong>Documentación oficial primero.</strong> Los ejemplos de la doc están permitidos: copiar boilerplate no es hacer trampa; lo que no copias son las decisiones.</li>
+    <li><strong>Regla de los 30 minutos.</strong> Atascado 30 minutos: abre la pista. Otros 30: abre la solución orientativa. Atascarse más rato no enseña más.</li>
+    <li><strong>Diario de errores.</strong> Apunta cada error que te costó resolver: el mensaje exacto, la causa y el arreglo. Es oro para las entrevistas (“cuéntame un problema difícil que resolviste”).</li>
+    <li><strong>Si recurres a una IA,</strong> que sea para que te explique un concepto o un mensaje de error, nunca para que escriba el código.</li>
+  </ul>
+
+  <h3>Qué debes hacer</h3>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="plan-repo"> <span>Crea el repo público <code>vigia</code> con README, licencia MIT y <code>.gitignore</code></span></label>
+    <p>El README puede tener solo un título y tres secciones vacías (Qué es, Arquitectura, Cómo ejecutarlo). Lo irás rellenando.</p>
+  </div>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="plan-scope"> <span>Escribe <code>docs/scope.md</code>: qué hace y, sobre todo, qué NO hace</span></label>
+    <p>La lista de exclusiones es lo importante. Cuando dudes si añadir algo, consúltala.</p>
+    <details class="spoil"><summary>Spoiler · ejemplo de exclusiones</summary>
+      <ul>
+        <li>No hay usuarios ni login: una única API key para escribir.</li>
+        <li>No hay interfaz web: Grafana es la interfaz.</li>
+        <li>No hay notificaciones a usuarios: las alertas son para quien opera el servicio.</li>
+        <li>No hay alta disponibilidad multi-nodo ni multi-región.</li>
+        <li>No hay colas externas (Redis, RabbitMQ): Postgres hace de cola.</li>
+      </ul>
+    </details>
+  </div>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="plan-ideas"> <span>Crea <code>IDEAS.md</code>, tu aparcamiento de ideas</span></label>
+    <p>Una lista sin orden. Regla: lo que entra aquí no se implementa hasta la fase 10, y probablemente nunca.</p>
+  </div>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="plan-board"> <span>Crea un GitHub Project con una issue por fase</span></label>
+    <p>Pega en cada issue el “Hecho cuando” de la fase. Cerrar issues con un PR que las referencia deja un historial que se lee muy bien desde fuera.</p>
+  </div>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="plan-adr"> <span>Escribe <code>docs/adr/0001-stack.md</code></span></label>
+    <p>Un ADR (Architecture Decision Record) explica una decisión: contexto, opciones, decisión y consecuencias. Escribirás uno cada vez que elijas entre dos caminos razonables.</p>
+    <details class="spoil"><summary>Spoiler · plantilla de ADR</summary>
+<script type="text/x-code" data-lang="txt" data-file="docs/adr/0001-stack.md">
+# 1. Stack del proyecto
+
+Fecha: 2026-11-03 · Estado: aceptada
+
+## Contexto
+Quiero un proyecto que demuestre el ciclo DevOps completo con un coste
+mensual cercano a cero y que pueda levantar y destruir a demanda.
+
+## Opciones
+- EKS: Kubernetes gestionado, pero cuesta dinero solo por existir.
+- k3s en una EC2: barato y bajo mi control; yo opero el plano de control.
+- ECS Fargate: sencillo, pero enseña menos Kubernetes, que piden las ofertas.
+
+## Decisión
+k3s en una única EC2, creado con Terraform.
+
+## Consecuencias
++ Coste bajo, mismo k3s en local (k3d) y en la nube.
+- Sin alta disponibilidad: si cae el nodo, cae todo. Aceptable para una demo.
+- En una empresa usaría EKS o similar; lo documento en el README.
+</script>
+    </details>
+  </div>
+  <div class="note ok"><span class="lbl">Hecho cuando</span><p>Alguien que no te conoce lee el README y <code>scope.md</code> y sabe qué vas a construir y qué no.</p></div>
+  <div class="note warn"><span class="lbl">Trampas</span><p>Pasar horas eligiendo nombre, logo o la plantilla perfecta del README. Investigar cinco alternativas para cada pieza: la tabla de arriba ya es una elección razonable; cámbiala solo si tienes un motivo concreto.</p></div>
+
+  <h3>Preguntas de entrevista</h3>
+  <details class="qa"><summary>¿Cómo decides qué entra en un proyecto cuando hay más ideas que tiempo?</summary>
+    <p>Defino primero el resultado mínimo que aporta valor y su criterio de terminado, y todo lo demás va a una lista aparcada que reviso al final. Cada decisión no obvia queda en un ADR para no volver a discutirla.</p></details>
+  <details class="qa"><summary>¿Qué es un ADR y por qué lo usarías?</summary>
+    <p>Un documento corto que registra una decisión de arquitectura con su contexto y consecuencias. Sirve para que dentro de seis meses alguien (o tú) entienda por qué se eligió algo y cuándo dejaría de tener sentido.</p></details>
+</section>
+
+<!-- ============ 01 ============ -->
+<section class="block" id="b-app" data-track data-est="8">
+  <p class="eyebrow">Fase 01 · Aplicación · ~8 h</p>
+  <h2>La aplicación mínima, pensada para operarse</h2>
+  <p class="lead">No buscas una app bonita, sino una app que se porte bien en producción: configuración por entorno, salud comprobable, logs legibles por máquinas, apagado limpio y un worker que escala sin pisarse.</p>
+  <div class="goals"><strong>Al terminar tendrás</strong>
+    <ul>
+      <li>La API y el worker funcionando contra un Postgres local.</li>
+      <li>Endpoints de salud separados para liveness y readiness.</li>
+      <li>Logs JSON y apagado limpio con SIGTERM.</li>
+      <li>Tests unitarios y de integración contra un Postgres real.</li>
+    </ul>
+  </div>
+<pre class="tree">vigia/
+├── src/vigia/
+│   ├── api.py          <span class="t-c"># FastAPI: endpoints y API key</span>
+│   ├── worker.py       <span class="t-c"># bucle de checks</span>
+│   ├── db.py           <span class="t-c"># conexión y consultas</span>
+│   └── config.py       <span class="t-c"># todo sale de variables de entorno</span>
+├── migrations/         <span class="t-c"># Alembic</span>
+├── tests/
+├── pyproject.toml      <span class="t-c"># con uv; ruff y pytest como dev</span>
+└── IDEAS.md</pre>
+
+  <h3>Qué debes hacer</h3>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="app-config"> <span>Configuración 12-factor: todo por variables de entorno</span></label>
+    <p><code>DATABASE_URL</code>, <code>API_KEY</code>, <code>LOG_LEVEL</code>, <code>CHECK_TIMEOUT</code>… Si falta una obligatoria, la app debe morir al arrancar con un mensaje claro, no fallar en la primera petición.</p>
+    <details class="spoil"><summary>Spoiler · fallar pronto</summary>
+<script type="text/x-code" data-lang="py" data-file="src/vigia/config.py">
+import os
+
+def required(name: str) -> str:
+    value = os.environ.get(name)
+    if not value:
+        raise SystemExit(f"Falta la variable de entorno {name}")
+    return value
+
+DATABASE_URL = required("DATABASE_URL")
+API_KEY = required("API_KEY")
+CHECK_TIMEOUT = float(os.environ.get("CHECK_TIMEOUT", "5"))
+</script>
+    </details>
+  </div>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="app-db"> <span>Esquema y migraciones con Alembic</span></label>
+    <p><code>monitors</code> (id, url, interval_seconds, next_check_at, created_at) y <code>checks</code> (id, monitor_id, status_code, latency_ms, ok, error, checked_at). Índice en <code>next_check_at</code> y en <code>(monitor_id, checked_at)</code>.</p>
+    <details class="spoil"><summary>Spoiler · por qué migraciones y no create_all</summary>
+      <p>En producción la base de datos ya existe y tiene datos. Las migraciones son cambios versionados y ordenados que se aplican una vez; <code>create_all</code> solo sirve para crear desde cero. En la fase 04 las ejecutarás como un Job antes de cada despliegue.</p>
+    </details>
+  </div>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="app-api"> <span>Endpoints y API key en las operaciones de escritura</span></label>
+    <p>Valida la URL (solo <code>http</code>/<code>https</code>) y el intervalo (por ejemplo, entre 30 y 3600 segundos). Compara la API key con <code>hmac.compare_digest</code>, no con <code>==</code>.</p>
+    <details class="spoil"><summary>Spoiler · por qué compare_digest</summary>
+      <p><code>==</code> termina en cuanto encuentra un carácter distinto, así que el tiempo de respuesta filtra cuántos caracteres acertaste (ataque de temporización). <code>compare_digest</code> tarda lo mismo siempre. Es un detalle pequeño que en una entrevista dice mucho.</p>
+    </details>
+  </div>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="app-worker"> <span>Worker que reclama trabajo sin pisarse con otras réplicas</span></label>
+    <p>Debe poder ejecutarse con 1 o con 5 réplicas sin comprobar dos veces el mismo monitor. Timeout corto por check y ninguna excepción debe tumbar el bucle.</p>
+    <details class="spoil"><summary>Spoiler · pista</summary>
+      <p>Busca <code>SELECT … FOR UPDATE SKIP LOCKED</code> en la documentación de PostgreSQL. Con eso, la tabla <code>monitors</code> es tu cola y no necesitas Redis ni RabbitMQ.</p>
+    </details>
+    <details class="spoil"><summary>Spoiler · solución orientativa</summary>
+<script type="text/x-code" data-lang="sql" data-file="reclamar monitores pendientes">
+-- Cada réplica reclama hasta 10 monitores pendientes.
+-- Las filas que otra réplica tiene bloqueadas se saltan.
+WITH due AS (
+  SELECT id FROM monitors
+  WHERE next_check_at <= now()
+  ORDER BY next_check_at
+  LIMIT 10
+  FOR UPDATE SKIP LOCKED
+)
+UPDATE monitors m
+SET next_check_at = now() + make_interval(secs => m.interval_seconds)
+FROM due
+WHERE m.id = due.id
+RETURNING m.id, m.url;
+</script>
+      <p>Al mover <code>next_check_at</code> en la misma transacción, aunque el check tarde, nadie más lo reclamará en esta ronda.</p>
+    </details>
+  </div>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="app-health"> <span><code>/healthz</code> y <code>/readyz</code> con significados distintos</span></label>
+    <p>Liveness: “el proceso responde”. Readiness: “puedo atender tráfico ahora mismo”. Piensa qué debe pasar si cae la base de datos.</p>
+    <details class="spoil"><summary>Spoiler · solución orientativa</summary>
+<script type="text/x-code" data-lang="py" data-file="src/vigia/api.py">
+@app.get("/healthz")
+def healthz():
+    # Liveness: nunca mira la BD. Si la BD cae,
+    # reiniciar la API no arregla nada y solo añade ruido.
+    return {"status": "ok"}
+
+@app.get("/readyz")
+def readyz(response: Response):
+    # Readiness: si la BD no responde, Kubernetes deja de
+    # enviarme tráfico, pero no me reinicia.
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+        return {"status": "ok", "db": "ok"}
+    except Exception:
+        response.status_code = 503
+        return {"status": "fail", "db": "unreachable"}
+</script>
+    </details>
+  </div>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="app-logs"> <span>Logs JSON a stdout, con un <code>request_id</code> por petición</span></label>
+    <p>Nada de ficheros de log: en contenedores se escribe a stdout y la plataforma los recoge. Un middleware genera el id (o respeta el de la cabecera <code>X-Request-ID</code>) y lo incluye en cada línea.</p>
+    <details class="spoil"><summary>Spoiler · formatter JSON con la librería estándar</summary>
+<script type="text/x-code" data-lang="py" data-file="src/vigia/logs.py">
+import json, logging, sys
+
+class JsonFormatter(logging.Formatter):
+    def format(self, record):
+        entry = {
+            "ts": self.formatTime(record),
+            "level": record.levelname,
+            "logger": record.name,
+            "msg": record.getMessage(),
+        }
+        entry.update(getattr(record, "fields", {}))
+        return json.dumps(entry)
+
+handler = logging.StreamHandler(sys.stdout)
+handler.setFormatter(JsonFormatter())
+logging.basicConfig(level="INFO", handlers=[handler])
+
+# uso: log.info("check done", extra={"fields": {"monitor_id": 7, "latency_ms": 132}})
+</script>
+    </details>
+  </div>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="app-sigterm"> <span>Apagado limpio con SIGTERM en el worker</span></label>
+    <p>Kubernetes envía SIGTERM y espera 30 segundos antes de matar. El worker debe terminar el check en curso y salir, no quedarse dormido ignorando la señal.</p>
+    <details class="spoil"><summary>Spoiler · solución orientativa</summary>
+<script type="text/x-code" data-lang="py" data-file="src/vigia/worker.py">
+import signal, threading
+
+stop = threading.Event()
+signal.signal(signal.SIGTERM, lambda *_: stop.set())
+
+while not stop.is_set():
+    for monitor in claim_due_monitors(limit=10):
+        run_check(monitor)      # timeout corto; captura sus propias excepciones
+    stop.wait(timeout=2)        # duerme, pero despierta al instante con SIGTERM
+</script>
+    </details>
+  </div>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="app-tests"> <span>Tests: unitarios y de integración contra Postgres real</span></label>
+    <p>Prueba la validación de entrada, la API key y, sobre todo, que dos “workers” a la vez no reclaman el mismo monitor. Para la integración levanta Postgres con <code>docker run</code>; no uses SQLite para fingirlo.</p>
+    <details class="spoil"><summary>Spoiler · el test que más vale</summary>
+      <p>Abre dos conexiones, empieza una transacción en cada una y reclama desde ambas sin hacer commit. Comprueba que los conjuntos de ids no se solapan. Ese test demuestra que entiendes concurrencia en la base de datos.</p>
+    </details>
+  </div>
+  <div class="note ok"><span class="lbl">Hecho cuando</span><p><code>pytest</code> pasa en verde y, con un Postgres local, creas un monitor por <code>curl</code> y en menos de un minuto aparecen sus checks.</p></div>
+  <div class="note warn"><span class="lbl">Trampas</span><p>Async “porque es más rápido” si no lo dominas. ORM con relaciones elaboradas. Paginación, filtros y ordenación configurables. Un panel web. Perseguir el 100 % de cobertura. Ninguna de estas cosas aparece en tu CV de DevOps.</p></div>
+  <div class="note"><span class="lbl">Para tu CV</span><p>“Worker escalable horizontalmente usando PostgreSQL como cola con <code>SKIP LOCKED</code>, con apagado limpio y endpoints de salud para Kubernetes.”</p></div>
+
+  <h3>Preguntas de entrevista</h3>
+  <details class="qa"><summary>¿Qué diferencia hay entre liveness y readiness?</summary>
+    <p>Si falla liveness, Kubernetes reinicia el contenedor. Si falla readiness, lo saca del Service y deja de enviarle tráfico, sin reiniciarlo. Por eso la liveness no debe depender de servicios externos: una base de datos caída provocaría reinicios en cascada que no arreglan nada.</p></details>
+  <details class="qa"><summary>¿Cómo repartes trabajo entre varias réplicas sin una cola de mensajes?</summary>
+    <p>Con <code>FOR UPDATE SKIP LOCKED</code>: cada réplica bloquea las filas que reclama y las demás se las saltan. Funciona muy bien hasta volúmenes considerables; si creciera mucho, pasaría a una cola dedicada.</p></details>
+  <details class="qa"><summary>¿Qué es una app 12-factor?</summary>
+    <p>Un conjunto de prácticas para apps desplegables en la nube: configuración por entorno, procesos sin estado, logs como flujo a stdout, servicios externos como recursos intercambiables, paridad entre entornos, arranque rápido y apagado limpio.</p></details>
+</section>
+
+<!-- ============ 02 ============ -->
+<section class="block" id="b-docker" data-track data-est="5">
+  <p class="eyebrow">Fase 02 · Contenedores · ~5 h</p>
+  <h2>Contenedores y entorno local reproducible</h2>
+  <p class="lead">Una sola imagen para la API y el worker, pequeña y sin root, y un <code>compose.yaml</code> que levanta todo con un comando en cualquier máquina.</p>
+  <div class="goals"><strong>Al terminar tendrás</strong>
+    <ul>
+      <li>Un Dockerfile multi-stage que no ejecuta como root.</li>
+      <li>Docker Compose con base de datos, migración, API y worker.</li>
+      <li>Un Makefile como punto de entrada para todo.</li>
+      <li>Tus primeras cifras para el README: tamaño de la imagen antes y después.</li>
+    </ul>
+  </div>
+
+  <h3>Qué debes hacer</h3>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="dk-file"> <span>Dockerfile multi-stage, usuario no root, sin herramientas de build en la imagen final</span></label>
+    <p>La misma imagen sirve para API y worker; cambia solo el comando. Ordena las capas para que cambiar código no reinstale dependencias.</p>
+    <details class="spoil"><summary>Spoiler · pista</summary>
+      <p>Copia primero <code>pyproject.toml</code> y el lock, instala dependencias, y después copia el código. Docker reutiliza las capas que no cambian. En la etapa final copia solo el entorno virtual ya construido.</p>
+    </details>
+    <details class="spoil"><summary>Spoiler · solución orientativa</summary>
+<script type="text/x-code" data-lang="docker" data-file="Dockerfile">
+# --- etapa 1: construir el entorno virtual ---
+FROM python:3.13-slim AS build
+COPY --from=ghcr.io/astral-sh/uv:0.8 /uv /bin/uv
+WORKDIR /app
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-dev --no-install-project
+COPY src/ ./src/
+RUN uv sync --frozen --no-dev --no-editable
+
+# --- etapa 2: imagen final, sin uv ni compiladores ---
+FROM python:3.13-slim
+RUN useradd --uid 10001 --no-create-home app
+WORKDIR /app
+COPY --from=build /app/.venv /app/.venv
+COPY alembic.ini ./
+COPY migrations/ ./migrations/
+ENV PATH="/app/.venv/bin:$PATH" PYTHONUNBUFFERED=1
+USER 10001
+EXPOSE 8000
+CMD ["uvicorn", "vigia.api:app", "--host", "0.0.0.0", "--port", "8000"]
+</script>
+      <p>Usa un UID numérico: Kubernetes puede comprobar <code>runAsNonRoot</code> con un número, no con un nombre. Fija las versiones de las imágenes base que uses.</p>
+    </details>
+  </div>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="dk-ignore"> <span><code>.dockerignore</code></span></label>
+    <p><code>.git</code>, <code>.venv</code>, tests, cachés y cualquier <code>.env</code>. Sin él, el contexto de build pesa más y puedes meter secretos en la imagen sin darte cuenta.</p>
+  </div>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="dk-compose"> <span><code>compose.yaml</code>: db, migrate, api y worker</span></label>
+    <p>La migración se ejecuta una vez y termina; la API y el worker esperan a que acabe bien. Postgres con healthcheck y volumen con nombre.</p>
+    <details class="spoil"><summary>Spoiler · solución orientativa</summary>
+<script type="text/x-code" data-lang="yaml" data-file="compose.yaml">
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_PASSWORD: dev
+      POSTGRES_DB: vigia
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 2s
+      retries: 15
+  migrate:
+    build: .
+    command: ["alembic", "upgrade", "head"]
+    environment: &env
+      DATABASE_URL: postgresql+psycopg://postgres:dev@db:5432/vigia
+      API_KEY: dev-key
+    depends_on:
+      db: { condition: service_healthy }
+  api:
+    build: .
+    environment: *env
+    ports: ["8000:8000"]
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+  worker:
+    build: .
+    command: ["python", "-m", "vigia.worker"]
+    environment: *env
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+volumes:
+  pgdata:
+</script>
+    </details>
+  </div>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="dk-make"> <span>Makefile como punto de entrada</span></label>
+    <p><code>make up</code>, <code>make down</code>, <code>make test</code>, <code>make logs</code>. Quien llegue a tu repo no tiene que leer nada más para arrancarlo.</p>
+  </div>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="dk-measure"> <span>Mide y apunta: tamaño de imagen y tiempo de build con y sin caché</span></label>
+    <p><code>docker images</code> y <code>time docker build .</code>. Apunta la primera versión ingenua y la final. Los números concretos son lo que hace creíble un README.</p>
+  </div>
+  <div class="note ok"><span class="lbl">Hecho cuando</span><p>En una máquina limpia, <code>git clone</code> + <code>make up</code> deja la API respondiendo en <code>localhost:8000</code> y el worker guardando checks.</p></div>
+  <div class="note warn"><span class="lbl">Trampas</span><p>Obsesionarte con el tamaño (distroless, compilar dependencias a mano) por diez megas. Recarga en caliente perfecta dentro del contenedor. Usar Compose en producción: aquí solo es para desarrollo local.</p></div>
+  <div class="note"><span class="lbl">Para tu CV</span><p>“Imagen multi-stage sin root reducida de X MB a Y MB; entorno local reproducible con un comando.” Sustituye X e Y por tus mediciones.</p></div>
+
+  <h3>Preguntas de entrevista</h3>
+  <details class="qa"><summary>¿Por qué multi-stage?</summary>
+    <p>Para que la imagen final lleve solo lo necesario para ejecutar: menos tamaño, menos superficie de ataque y menos vulnerabilidades que reporta el escáner. Compiladores y gestores de paquetes se quedan en la etapa de build.</p></details>
+  <details class="qa"><summary>¿Por qué no ejecutar como root dentro del contenedor?</summary>
+    <p>Si alguien explota la app, obtiene los permisos del proceso. Como root, una fuga del contenedor o un volumen mal montado tiene consecuencias mucho mayores. Además, muchas políticas de cluster (Pod Security <em>restricted</em>) lo rechazan.</p></details>
+  <details class="qa"><summary>¿CMD o ENTRYPOINT?</summary>
+    <p><code>ENTRYPOINT</code> fija el ejecutable y <code>CMD</code> da argumentos por defecto que se pueden sobrescribir. Con una imagen que sirve para varios procesos, un <code>CMD</code> sobrescribible es lo más cómodo: Kubernetes cambia el comando con <code>command</code>/<code>args</code>.</p></details>
+</section>
+
+<!-- ============ 03 ============ -->
+<section class="block" id="b-ci" data-track data-est="6">
+  <p class="eyebrow">Fase 03 · CI · ~6 h</p>
+  <h2>Integración continua con GitHub Actions</h2>
+  <p class="lead">Cada PR se prueba sola; cada merge produce una imagen inmutable, escaneada y publicada. Y el propio pipeline se trata como código sensible: permisos mínimos y dependencias fijadas.</p>
+  <div class="goals"><strong>Al terminar tendrás</strong>
+    <ul>
+      <li>Lint y tests (con Postgres real) en cada pull request.</li>
+      <li>Imagen etiquetada con el SHA del commit en GHCR tras cada merge.</li>
+      <li>Escaneo de vulnerabilidades que bloquea lo crítico.</li>
+      <li><code>main</code> protegida: nadie (ni tú) hace push directo.</li>
+    </ul>
+  </div>
+
+  <h3>Qué debes hacer</h3>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="ci-test"> <span>Job de test en cada PR: ruff y pytest con un Postgres como service container</span></label>
+    <details class="spoil"><summary>Spoiler · solución orientativa</summary>
+<script type="text/x-code" data-lang="yaml" data-file=".github/workflows/ci.yml">
+name: ci
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 2s --health-retries 15
+    env:
+      DATABASE_URL: postgresql+psycopg://postgres:test@localhost:5432/postgres
+      API_KEY: test
+    steps:
+      - uses: actions/checkout@v5          # en tu repo: fija cada action por SHA
+      - uses: astral-sh/setup-uv@v6
+      - run: uv sync --frozen
+      - run: uv run ruff check .
+      - run: uv run pytest
+</script>
+    </details>
+  </div>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="ci-image"> <span>Build y push a GHCR solo desde <code>main</code>, con tag <code>sha-xxxxxxx</code> y caché</span></label>
+    <p>Nunca despliegues <code>latest</code>: un tag inmutable te dice exactamente qué código corre y permite volver atrás.</p>
+    <details class="spoil"><summary>Spoiler · solución orientativa</summary>
+<script type="text/x-code" data-lang="yaml" data-file=".github/workflows/ci.yml (continuación)">
+  image:
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v5
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: type=sha
+      - uses: docker/build-push-action@v6
+        with:
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+</script>
+      <p>GHCR exige el nombre en minúsculas; <code>metadata-action</code> ya lo convierte. Si tu nodo en la nube será ARM (t4g), añade <code>platforms: linux/amd64,linux/arm64</code> con <code>setup-qemu-action</code>, o construye en un runner ARM.</p>
+    </details>
+  </div>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="ci-scan"> <span>Escaneo con Trivy que falla con vulnerabilidades críticas que tengan arreglo</span></label>
+    <p>Lo ideal es escanear antes de publicar: construye con <code>load: true</code>, escanea, y solo después haz push.</p>
+    <details class="spoil"><summary>Spoiler · pista</summary>
+      <p>Opciones de Trivy que te interesan: <code>severity: CRITICAL</code> (o <code>HIGH,CRITICAL</code>), <code>ignore-unfixed: true</code> para no bloquear por algo que aún nadie puede arreglar, y <code>exit-code: "1"</code> para que el job falle. Lo que aceptes conscientemente va a un <code>.trivyignore</code> con un comentario del porqué.</p>
+    </details>
+  </div>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="ci-harden"> <span>Endurece el pipeline: actions fijadas por SHA, <code>permissions</code> mínimos por job y Dependabot</span></label>
+    <p>Dependabot para <code>github-actions</code>, <code>pip</code>/<code>uv</code> y <code>docker</code>: él te propondrá actualizar los SHA fijados.</p>
+    <details class="spoil"><summary>Spoiler · por qué fijar por SHA</summary>
+      <p>Un tag como <code>@v4</code> lo puede mover quien controle ese repositorio. En marzo de 2025 alguien comprometió <code>tj-actions/changed-files</code> y movió sus tags a un commit que volcaba los secretos de los pipelines en los logs. Un SHA no se puede mover. Es una historia muy buena para contar en una entrevista.</p>
+    </details>
+  </div>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="ci-protect"> <span>Protege <code>main</code>: PR obligatoria y el job de test como check requerido</span></label>
+    <p>Desde ahora todo entra por PR, aunque trabajes solo. El historial de PRs pequeñas con descripción es parte del portfolio.</p>
+  </div>
+  <div class="note ok"><span class="lbl">Hecho cuando</span><p>Una PR con un test roto no se puede fusionar, y fusionar una PR verde produce <code>ghcr.io/&lt;tu-usuario&gt;/vigia:sha-xxxxxxx</code> en menos de 6 minutos.</p></div>
+  <div class="note warn"><span class="lbl">Trampas</span><p>Matrices con cuatro versiones de Python. Runners propios. Workflows reutilizables antes de tener tres iguales. Versionado semántico automático ahora (es un extra de la fase 10).</p></div>
+  <div class="note"><span class="lbl">Para tu CV</span><p>“Pipeline CI en GitHub Actions con tests de integración, escaneo de vulnerabilidades y cadena de suministro endurecida (actions fijadas por SHA, permisos mínimos).”</p></div>
+
+  <h3>Preguntas de entrevista</h3>
+  <details class="qa"><summary>¿Qué diferencia hay entre continuous delivery y continuous deployment?</summary>
+    <p>En delivery, cada cambio queda listo para producción pero alguien decide cuándo sale. En deployment, sale solo si pasa el pipeline. Tu proyecto hará deployment continuo a dev y delivery a prod (promoción por PR).</p></details>
+  <details class="qa"><summary>¿Por qué no usar el tag <code>latest</code>?</summary>
+    <p>Porque no dice qué versión corre, cambia sin que cambie el manifiesto (Kubernetes no se entera de que hay que desplegar) y hace imposible un rollback fiable. Un tag por commit es inmutable y trazable.</p></details>
+  <details class="qa"><summary>¿Cómo proteges los secretos de un pipeline?</summary>
+    <p>Permisos mínimos del token por job, actions de terceros fijadas por SHA, nada de secretos en PRs de forks, y credenciales de nube temporales con OIDC en lugar de claves guardadas (lo harás en la fase 07).</p></details>
+</section>
+
+<!-- ============ 04 ============ -->
+<section class="block" id="b-k8s" data-track data-est="12">
+  <p class="eyebrow">Fase 04 · Kubernetes · ~12 h</p>
+  <h2>Kubernetes en local y chart de Helm</h2>
+  <p class="lead">Primero escribes los manifiestos a mano para entender cada pieza; después los conviertes en un chart de Helm con un values por entorno. Todo en tu portátil, gratis, con k3d.</p>
+  <div class="goals"><strong>Al terminar tendrás</strong>
+    <ul>
+      <li>Un cluster k3d con API, worker y Postgres funcionando.</li>
+      <li>Probes, recursos y contexto de seguridad en cada contenedor.</li>
+      <li>Migraciones como Job que se ejecuta antes de cada despliegue.</li>
+      <li>Un chart de Helm en el repo <code>vigia-deploy</code>, probado con actualizaciones sin cortes.</li>
+    </ul>
+  </div>
+
+  <h3>Qué debes hacer</h3>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="k8s-cluster"> <span>Cluster local con k3d e imagen cargada en él</span></label>
+    <p>k3d ejecuta k3s dentro de Docker: es el mismo Kubernetes que usarás en la nube, con Traefik como ingress incluido.</p>
+    <details class="spoil"><summary>Spoiler · comandos</summary>
+<script type="text/x-code" data-lang="sh" data-file="terminal">
+$ k3d cluster create vigia -p "8080:80@loadbalancer"
+$ docker build -t vigia:dev .
+$ k3d image import vigia:dev -c vigia
+$ kubectl get nodes
+</script>
+    </details>
+  </div>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="k8s-pg"> <span>Postgres como StatefulSet con PVC y Service</span></label>
+    <p>Credenciales en un Secret creado a mano con <code>kubectl create secret</code> (en la fase 07 lo sustituirás). En una empresa usarías una base de datos gestionada: apúntalo en un ADR.</p>
+  </div>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="k8s-app"> <span>Deployments de API (2 réplicas) y worker, Service, ConfigMap e Ingress</span></label>
+    <p>Incluye en cada contenedor: readiness y liveness, <code>requests</code> de CPU y memoria, límite de memoria, y un <code>securityContext</code> restrictivo.</p>
+    <details class="spoil"><summary>Spoiler · Deployment de la API</summary>
+<script type="text/x-code" data-lang="yaml" data-file="api-deployment.yaml">
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vigia-api
+spec:
+  replicas: 2
+  selector:
+    matchLabels: { app: vigia-api }
+  strategy:
+    rollingUpdate: { maxUnavailable: 0, maxSurge: 1 }
+  template:
+    metadata:
+      labels: { app: vigia-api, part-of: vigia }
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile: { type: RuntimeDefault }
+      containers:
+        - name: api
+          image: vigia:dev
+          ports: [{ name: http, containerPort: 8000 }]
+          envFrom:
+            - configMapRef: { name: vigia-config }
+            - secretRef: { name: vigia-secrets }
+          readinessProbe:
+            httpGet: { path: /readyz, port: http }
+            periodSeconds: 5
+          livenessProbe:
+            httpGet: { path: /healthz, port: http }
+            periodSeconds: 10
+          resources:
+            requests: { cpu: 50m, memory: 128Mi }
+            limits: { memory: 256Mi }   # sin límite de CPU a propósito
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: [ALL] }
+</script>
+      <p>Sin límite de CPU para evitar throttling: la CPU se comparte, la memoria no. Es una decisión debatida; tenla clara para defenderla.</p>
+    </details>
+  </div>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="k8s-migrate"> <span>Migraciones como Job previo al despliegue</span></label>
+    <p>Las migraciones deben ejecutarse una vez, antes de que arranquen los pods nuevos, y si fallan el despliegue debe pararse.</p>
+    <details class="spoil"><summary>Spoiler · pista</summary>
+      <p>Un <code>initContainer</code> también funcionaría, pero se ejecuta en cada réplica a la vez: varias migraciones compitiendo. Mejor un Job con las anotaciones de hook de Helm (<code>pre-install,pre-upgrade</code>). Argo CD las respeta: las convierte en hooks <code>PreSync</code>.</p>
+    </details>
+    <details class="spoil"><summary>Spoiler · solución orientativa</summary>
+<script type="text/x-code" data-lang="yaml" data-file="chart/templates/migrate-job.yaml">
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: vigia-migrate
+  annotations:
+    helm.sh/hook: pre-install,pre-upgrade
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 2
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: migrate
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          command: ["alembic", "upgrade", "head"]
+          envFrom:
+            - secretRef: { name: vigia-secrets }
+</script>
+      <p>Trampa clásica: si el Secret forma parte del mismo chart, en la primera instalación aún no existe cuando corre el hook. Por eso, de momento, el Secret se crea fuera del chart.</p>
+    </details>
+  </div>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="k8s-helm"> <span>Convierte los manifiestos en un chart en el repo <code>vigia-deploy</code></span></label>
+    <p>Parametriza solo lo que cambia entre entornos: tag de imagen, réplicas, host del Ingress, recursos. <code>values-dev.yaml</code> y <code>values-prod.yaml</code>. Añade <code>helm lint</code> y <code>helm template</code> a un workflow de ese repo.</p>
+  </div>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="k8s-rolling"> <span>Demuestra un rolling update sin errores</span></label>
+    <p>Mientras cambias la imagen, lanza peticiones sin parar. Cualquier respuesta distinta de 200 es un corte que debes explicar y arreglar.</p>
+    <details class="spoil"><summary>Spoiler · bucle de prueba</summary>
+<script type="text/x-code" data-lang="sh" data-file="otra terminal">
+$ while true; do curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8080/readyz; sleep 0.2; done
+</script>
+      <p>Si ves algún 502 al terminar un pod: el pod deja de aceptar conexiones antes de que el ingress se entere. La solución habitual es un <code>preStop</code> con una pausa de unos segundos, o que la app siga respondiendo durante el apagado.</p>
+    </details>
+  </div>
+  <div class="note ok"><span class="lbl">Hecho cuando</span><p><code>helm upgrade --install</code> en k3d deja todo en verde y cambiar la imagen produce un rolling update sin ningún error en el bucle de <code>curl</code>.</p></div>
+  <div class="note warn"><span class="lbl">Trampas</span><p>Hacer un chart genérico “para cualquier app”. Parametrizar todo. Service mesh. Un operador para Postgres (CloudNativePG es un buen extra, no un requisito). HPA ahora: llega en la fase 09, cuando tengas carga para justificarlo.</p></div>
+  <div class="note"><span class="lbl">Para tu CV</span><p>“Despliegue en Kubernetes empaquetado con Helm: probes, límites de recursos, contexto de seguridad restrictivo, migraciones como hook y actualizaciones sin cortes verificadas.”</p></div>
+
+  <h3>Preguntas de entrevista</h3>
+  <details class="qa"><summary>¿Deployment o StatefulSet?</summary>
+    <p>Deployment para pods intercambiables sin estado. StatefulSet cuando cada réplica necesita identidad estable (nombre fijo, su propio volumen y un orden de arranque), como una base de datos.</p></details>
+  <details class="qa"><summary>¿Qué pasa si un contenedor supera su límite de memoria? ¿Y el de CPU?</summary>
+    <p>Memoria: el kernel lo mata (<code>OOMKilled</code>) y se reinicia. CPU: no se mata, se le limita el tiempo de CPU (throttling) y se vuelve lento. Los <code>requests</code> deciden dónde se programa el pod y lo que tiene garantizado.</p></details>
+  <details class="qa"><summary>¿Cómo funciona un rolling update?</summary>
+    <p>El Deployment crea un ReplicaSet nuevo y va subiendo réplicas nuevas y bajando viejas según <code>maxSurge</code> y <code>maxUnavailable</code>. Solo da por buena una réplica cuando pasa la readiness; si no la pasa, el despliegue se queda parado sin tumbar las viejas.</p></details>
+</section>
+
+<!-- ============ 05 ============ -->
+<section class="block" id="b-infra" data-track data-est="8">
+  <p class="eyebrow">Fase 05 · Infraestructura · ~8 h</p>
+  <h2>La nube con Terraform: un cluster que nace y muere con un comando</h2>
+  <p class="lead">Una red mínima, una instancia con k3s, una IP fija, state remoto y un pipeline que muestra el plan en cada PR. El objetivo no es tener la infraestructura encendida siempre, sino poder recrearla en minutos.</p>
+  <div class="goals"><strong>Al terminar tendrás</strong>
+    <ul>
+      <li>Una cuenta de AWS protegida y con alerta de presupuesto.</li>
+      <li>VPC, instancia con k3s, IP elástica y security group, todo en Terraform.</li>
+      <li>State remoto en S3 con bloqueo.</li>
+      <li>Un dominio con HTTPS de Let's Encrypt.</li>
+      <li>El tiempo medido de “nada” a “cluster listo”.</li>
+    </ul>
+  </div>
+  <div class="note warn"><span class="lbl">Coste</span><p>Una instancia de 4 GB cuesta unos céntimos por hora. Crea una alerta de presupuesto antes que nada y destruye todo al terminar cada sesión de trabajo: <code>terraform destroy</code> es parte del flujo, no una emergencia. Alternativa más barata para tenerlo encendido semanas: Hetzner, que tiene provider de Terraform.</p></div>
+
+  <h3>Qué debes hacer</h3>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="tf-account"> <span>Cuenta segura: MFA en root, usuario administrador para el día a día y alerta de presupuesto</span></label>
+  </div>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="tf-state"> <span>Bucket de state (versionado, cifrado, sin acceso público) y backend S3 con <code>use_lockfile = true</code></span></label>
+    <p>Lo hiciste en la fase 1 del proyecto del atlas de Terraform: reutilízalo.</p>
+  </div>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="tf-net"> <span>VPC con una subred pública, internet gateway, rutas y security group</span></label>
+    <p>80 y 443 abiertos al mundo; 22 y 6443 (API de Kubernetes) solo desde tu IP.</p>
+    <details class="spoil"><summary>Spoiler · la trampa del egress</summary>
+      <p>Cuando Terraform crea un security group, elimina la regla de salida que AWS pone por defecto. Si no declaras una regla de egress, la instancia no puede descargar nada y la instalación de k3s falla sin un error obvio.</p>
+<script type="text/x-code" data-lang="hcl" data-file="network.tf">
+resource "aws_vpc_security_group_ingress_rule" "web" {
+  for_each          = toset(["80", "443"])
+  security_group_id = aws_security_group.k3s.id
+  cidr_ipv4         = "0.0.0.0/0"
+  from_port         = each.value
+  to_port           = each.value
+  ip_protocol       = "tcp"
+}
+
+resource "aws_vpc_security_group_ingress_rule" "admin" {
+  for_each          = toset(["22", "6443"])
+  security_group_id = aws_security_group.k3s.id
+  cidr_ipv4         = "${var.my_ip}/32"
+  from_port         = each.value
+  to_port           = each.value
+  ip_protocol       = "tcp"
+}
+
+resource "aws_vpc_security_group_egress_rule" "all" {
+  security_group_id = aws_security_group.k3s.id
+  cidr_ipv4         = "0.0.0.0/0"
+  ip_protocol       = "-1"
+}
+</script>
+    </details>
+  </div>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="tf-ec2"> <span>Instancia con k3s instalado por <code>user_data</code>, IP elástica e IMDSv2 obligatorio</span></label>
+    <p>Disco cifrado. Ubuntu LTS con la AMI obtenida por data source. La API de Kubernetes debe aceptar conexiones a la IP pública.</p>
+    <details class="spoil"><summary>Spoiler · pista</summary>
+      <p>Si pones la IP elástica en el <code>user_data</code> de la instancia y asocias la IP a la instancia en el propio <code>aws_eip</code>, Terraform detecta un ciclo. Crea la IP sola y asóciala con <code>aws_eip_association</code>. Para que kubectl funcione desde fuera, k3s necesita <code>--tls-san</code> con esa IP.</p>
+    </details>
+    <details class="spoil"><summary>Spoiler · solución orientativa</summary>
+<script type="text/x-code" data-lang="hcl" data-file="compute.tf">
+resource "aws_eip" "k3s" {
+  domain = "vpc"
+}
+
+resource "aws_instance" "k3s" {
+  ami                    = data.aws_ami.ubuntu.id
+  instance_type          = var.instance_type # t4g.medium (ARM) o t3.medium
+  subnet_id              = aws_subnet.public.id
+  vpc_security_group_ids = [aws_security_group.k3s.id]
+  key_name               = var.key_name
+
+  metadata_options {
+    http_tokens                 = "required" # IMDSv2
+    http_put_response_hop_limit = 1          # los pods no alcanzan el IMDS
+  }
+
+  root_block_device {
+    volume_size = 30
+    encrypted   = true
+  }
+
+  user_data = templatefile("${path.module}/cloud-init.sh", {
+    public_ip = aws_eip.k3s.public_ip
+  })
+}
+
+resource "aws_eip_association" "k3s" {
+  instance_id   = aws_instance.k3s.id
+  allocation_id = aws_eip.k3s.id
+}
+</script>
+<script type="text/x-code" data-lang="sh" data-file="cloud-init.sh">
+#!/bin/bash
+set -euo pipefail
+# --tls-san añade la IP pública al certificado de la API de Kubernetes
+curl -sfL https://get.k3s.io \
+  | INSTALL_K3S_EXEC="server --tls-san ${public_ip} --write-kubeconfig-mode 600" sh -
+</script>
+      <p>Fija la versión con <code>INSTALL_K3S_VERSION</code> para que recrear el cluster dé siempre lo mismo.</p>
+    </details>
+  </div>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="tf-kubeconfig"> <span>Obtén el kubeconfig y conecta desde tu máquina</span></label>
+    <details class="spoil"><summary>Spoiler · comandos</summary>
+<script type="text/x-code" data-lang="sh" data-file="terminal">
+$ IP=$(terraform output -raw public_ip)
+$ ssh ubuntu@$IP sudo cat /etc/rancher/k3s/k3s.yaml | sed "s/127.0.0.1/$IP/" > ~/.kube/vigia.yaml
+$ export KUBECONFIG=~/.kube/vigia.yaml
+$ kubectl get nodes
+</script>
+    </details>
+  </div>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="tf-tls"> <span>Dominio apuntando a la IP y certificado con cert-manager y Let's Encrypt</span></label>
+    <p>Un dominio propio cuesta pocos euros al año y es lo más sencillo. Usa primero el entorno <em>staging</em> de Let's Encrypt: el de producción tiene límites de peticiones y te puede bloquear un rato mientras pruebas.</p>
+  </div>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="tf-ci"> <span><code>terraform plan</code> en cada PR que toque <code>infra/</code></span></label>
+    <p>Con <code>fmt -check</code>, <code>validate</code> y el plan visible en el pipeline. La autenticación sin claves (OIDC) la configuras en la fase 07; hasta entonces, este job puede quedarse en <code>validate</code>.</p>
+  </div>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="tf-measure"> <span><code>make infra-up</code> y <code>make infra-down</code>, y mide cuánto tarda</span></label>
+    <p>Apunta el tiempo desde <code>apply</code> hasta <code>kubectl get nodes</code> en Ready. Es una cifra potente para el README.</p>
+  </div>
+  <div class="note ok"><span class="lbl">Hecho cuando</span><p>Desde cero, un comando deja un nodo Ready accesible desde tu portátil con HTTPS válido en tu dominio, y otro comando lo destruye todo sin dejar coste.</p></div>
+  <div class="note warn"><span class="lbl">Trampas</span><p>EKS “porque es lo profesional” (cuesta dinero solo por existir y tarda en crearse). Multi-AZ, NAT gateways, subredes privadas. Un módulo para cada recurso, Terragrunt, varias cuentas. Ansible para algo que hace un script de <code>user_data</code> de cinco líneas.</p></div>
+  <div class="note"><span class="lbl">Para tu CV</span><p>“Infraestructura en AWS definida con Terraform (state remoto con bloqueo, IMDSv2, cifrado), recreable desde cero en N minutos.”</p></div>
+
+  <h3>Preguntas de entrevista</h3>
+  <details class="qa"><summary>¿Por qué k3s en una instancia y no EKS?</summary>
+    <p>Por coste y control para una demo: EKS cobra por el plano de control aunque no haya carga. A cambio, opero yo el plano de control y no tengo alta disponibilidad. En una empresa elegiría un servicio gestionado; es un trade-off documentado en un ADR.</p></details>
+  <details class="qa"><summary>¿Qué es IMDSv2 y por qué el hop limit a 1?</summary>
+    <p>El servicio de metadatos de EC2 entrega credenciales temporales del rol de la instancia. IMDSv2 exige un token obtenido con PUT, lo que frena ataques SSRF simples. Con hop limit 1, el token no sobrevive al salto extra de la red de los contenedores, así que los pods no pueden robar las credenciales del nodo.</p></details>
+</section>
+
+<!-- ============ 06 ============ -->
+<section class="block" id="b-gitops" data-track data-est="6">
+  <p class="eyebrow">Fase 06 · Despliegue continuo · ~6 h</p>
+  <h2>Despliegue continuo con GitOps y Argo CD</h2>
+  <p class="lead">Git pasa a ser la única fuente de verdad: lo que está en <code>vigia-deploy</code> es lo que corre. El pipeline ya no toca el cluster; escribe un commit, y Argo CD hace el resto desde dentro.</p>
+  <div class="goals"><strong>Al terminar tendrás</strong>
+    <ul>
+      <li>Argo CD instalado y gestionando dos entornos: <code>vigia-dev</code> y <code>vigia-prod</code>.</li>
+      <li>Merge en <code>vigia</code> → despliegue automático en dev.</li>
+      <li>Promoción a prod mediante una PR revisada.</li>
+      <li>Rollback con <code>git revert</code>, medido.</li>
+    </ul>
+  </div>
+
+  <h3>Qué debes hacer</h3>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="go-install"> <span>Instala Argo CD con Helm y accede a la interfaz</span></label>
+    <p>Con <code>kubectl port-forward</code> basta. Cambia la contraseña inicial de admin y borra el Secret que la contiene.</p>
+  </div>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="go-apps"> <span>Dos <code>Application</code>: dev con sincronización automática y prod también, pero alimentada solo por PRs</span></label>
+    <details class="spoil"><summary>Spoiler · Application de dev</summary>
+<script type="text/x-code" data-lang="yaml" data-file="argocd/vigia-dev.yaml">
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: vigia-dev
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/tu-usuario/vigia-deploy
+    targetRevision: main
+    path: chart
+    helm:
+      valueFiles: [values-dev.yaml]
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: vigia-dev
+  syncPolicy:
+    automated: { prune: true, selfHeal: true }
+    syncOptions: [CreateNamespace=true]
+</script>
+      <p><code>selfHeal</code> revierte cualquier cambio hecho a mano en el cluster. Pruébalo: edita una réplica con <code>kubectl</code> y mira cómo vuelve.</p>
+    </details>
+  </div>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="go-bump"> <span>El CI de <code>vigia</code> actualiza <code>image.tag</code> en <code>values-dev.yaml</code> tras publicar la imagen</span></label>
+    <p>El token por defecto de Actions no puede escribir en otro repositorio. Necesitas una credencial con permiso de escritura solo sobre <code>vigia-deploy</code>.</p>
+    <details class="spoil"><summary>Spoiler · solución orientativa</summary>
+<script type="text/x-code" data-lang="yaml" data-file=".github/workflows/ci.yml (job extra)">
+  deploy-dev:
+    needs: image
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          repository: tu-usuario/vigia-deploy
+          ssh-key: ${{ secrets.DEPLOY_REPO_KEY }}   # deploy key con escritura solo en ese repo
+      - run: |
+          TAG="sha-${GITHUB_SHA::7}"
+          yq -i ".image.tag = \"$TAG\"" chart/values-dev.yaml
+          git config user.name "vigia-ci"
+          git config user.email "vigia-ci@users.noreply.github.com"
+          git commit -am "deploy(dev): $TAG"
+          git push
+</script>
+      <p>Alternativa: Argo CD Image Updater, que vigila el registro y hace el commit él. Más piezas que mantener; el commit desde CI es más explícito.</p>
+    </details>
+  </div>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="go-promote"> <span>Promoción a prod: PR que copia el tag de dev a <code>values-prod.yaml</code></span></label>
+    <p>Puede ser a mano o con un workflow manual (<code>workflow_dispatch</code>) que abre la PR. Lo importante: prod solo cambia por una PR revisada.</p>
+  </div>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="go-rollback"> <span>Despliega una versión rota a propósito y haz rollback con <code>git revert</code></span></label>
+    <p>Por ejemplo, una imagen cuya readiness siempre falla. Observa que el rolling update se queda parado sin tumbar las réplicas viejas, revierte y mide cuánto tarda en volver a estar sano. Apunta el tiempo.</p>
+  </div>
+  <div class="note ok"><span class="lbl">Hecho cuando</span><p>Fusionar una PR en <code>vigia</code> pone la nueva versión en dev en menos de 5 minutos sin tocar <code>kubectl</code>, y llevarla a prod es una PR en <code>vigia-deploy</code>.</p></div>
+  <div class="note warn"><span class="lbl">Trampas</span><p>ApplicationSets o app-of-apps con dos aplicaciones. Canary con Argo Rollouts ahora (es un extra). Gestionar Argo CD con el propio Argo CD antes de que lo demás funcione.</p></div>
+  <div class="note"><span class="lbl">Para tu CV</span><p>“GitOps con Argo CD: despliegue automático a dev, promoción a prod por pull request y rollback con <code>git revert</code> en N minutos.”</p></div>
+
+  <h3>Preguntas de entrevista</h3>
+  <details class="qa"><summary>¿Qué diferencia hay entre despliegue push y pull?</summary>
+    <p>En push, el pipeline tiene credenciales del cluster y aplica cambios desde fuera. En pull (GitOps), un agente dentro del cluster lee git y aplica: el CI no necesita acceso al cluster, todo cambio queda auditado en git y el drift se corrige solo.</p></details>
+  <details class="qa"><summary>¿Cómo haces rollback en GitOps?</summary>
+    <p>Reviertes el commit que cambió la versión. El cluster vuelve al estado anterior y el rollback queda registrado como cualquier otro cambio. Ojo con las migraciones: si la versión nueva cambió el esquema, la vieja debe seguir funcionando con él (migraciones compatibles hacia atrás).</p></details>
+</section>
+
+<!-- ============ 07 ============ -->
+<section class="block" id="b-sec" data-track data-est="6">
+  <p class="eyebrow">Fase 07 · Seguridad · ~6 h</p>
+  <h2>Secretos y seguridad: lo que te preguntarán seguro</h2>
+  <p class="lead">Cero secretos en claro en git, cero claves de larga duración en el pipeline, y defensa contra el ataque más evidente de tu propia app: un worker que hace peticiones a las URLs que le mande cualquiera.</p>
+  <div class="goals"><strong>Al terminar tendrás</strong>
+    <ul>
+      <li>Secretos cifrados en git con Sealed Secrets.</li>
+      <li>GitHub Actions autenticándose en AWS con OIDC, sin claves guardadas.</li>
+      <li>El worker protegido contra SSRF.</li>
+      <li>Tráfico a Postgres restringido y namespaces con Pod Security <em>restricted</em>.</li>
+      <li>Un modelo de amenazas de una página.</li>
+    </ul>
+  </div>
+
+  <h3>Qué debes hacer</h3>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="sec-leaks"> <span>gitleaks en pre-commit y en CI</span></label>
+    <p>Ejecútalo también sobre todo el historial. Si encuentras algo, rótalo: borrar el commit no basta, ese secreto ya se considera filtrado.</p>
+  </div>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="sec-sealed"> <span>Sealed Secrets: la contraseña de Postgres y la API key, cifradas en <code>vigia-deploy</code></span></label>
+    <p>El controlador del cluster es el único que puede descifrarlas. Guarda una copia de su clave privada fuera del cluster: si recreas el cluster sin ella, tus secretos sellados no sirven.</p>
+    <details class="spoil"><summary>Spoiler · cifrar un valor</summary>
+<script type="text/x-code" data-lang="sh" data-file="terminal">
+$ echo -n "$(openssl rand -hex 24)" \
+    | kubeseal --raw --namespace vigia-dev --name vigia-secrets --from-file=/dev/stdin
+</script>
+      <p>El resultado va en <code>values-dev.yaml</code> y una plantilla <code>SealedSecret</code> del chart lo coloca en <code>spec.encryptedData</code>. Cada valor está ligado a su namespace y nombre: el de dev no sirve en prod.</p>
+    </details>
+  </div>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="sec-oidc"> <span>OIDC de GitHub a AWS: rol que solo puede asumir tu repo, sin access keys</span></label>
+    <p>Activa ahora el <code>terraform plan</code> real en las PRs de <code>infra/</code>.</p>
+    <details class="spoil"><summary>Spoiler · política de confianza</summary>
+<script type="text/x-code" data-lang="hcl" data-file="oidc.tf">
+resource "aws_iam_openid_connect_provider" "github" {
+  url            = "https://token.actions.githubusercontent.com"
+  client_id_list = ["sts.amazonaws.com"]
+}
+
+data "aws_iam_policy_document" "gha_trust" {
+  statement {
+    actions = ["sts:AssumeRoleWithWebIdentity"]
+    principals {
+      type        = "Federated"
+      identifiers = [aws_iam_openid_connect_provider.github.arn]
+    }
+    condition {
+      test     = "StringEquals"
+      variable = "token.actions.githubusercontent.com:aud"
+      values   = ["sts.amazonaws.com"]
+    }
+    condition {
+      test     = "StringLike"
+      variable = "token.actions.githubusercontent.com:sub"
+      values   = ["repo:tu-usuario/vigia:*"]
+    }
+  }
+}
+</script>
+      <p>Sin la condición sobre <code>sub</code>, cualquier repositorio de GitHub podría asumir tu rol. Es el error más común con OIDC.</p>
+    </details>
+  </div>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="sec-ssrf"> <span>Protege el worker contra SSRF</span></label>
+    <p>Un monitor con la URL <code>http://169.254.169.254/</code> o <code>http://postgres:5432</code> no debe llegar a ejecutarse. Piensa también en las redirecciones.</p>
+    <details class="spoil"><summary>Spoiler · pista</summary>
+      <p>Resuelve el nombre y rechaza cualquier IP que no sea pública: el módulo <code>ipaddress</code> de la librería estándar tiene <code>is_global</code>. No sigas redirecciones automáticamente, o valida cada salto.</p>
+    </details>
+    <details class="spoil"><summary>Spoiler · solución orientativa</summary>
+<script type="text/x-code" data-lang="py" data-file="src/vigia/safety.py">
+import ipaddress, socket
+from urllib.parse import urlparse
+
+def is_public_url(url: str) -> bool:
+    host = urlparse(url).hostname
+    if not host:
+        return False
+    try:
+        infos = socket.getaddrinfo(host, None)
+    except socket.gaierror:
+        return False
+    for *_, sockaddr in infos:
+        ip = ipaddress.ip_address(sockaddr[0])
+        if not ip.is_global:   # privadas, loopback, link-local (169.254.x.x)...
+            return False
+    return True
+</script>
+      <p>Límite conocido: entre comprobar y pedir, el DNS podría cambiar (DNS rebinding). Para cerrarlo, conecta a la IP ya validada o bloquea la salida a rangos privados con una NetworkPolicy de egress. Explicar ese límite vale más que esconderlo.</p>
+    </details>
+  </div>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="sec-netpol"> <span>NetworkPolicy: a Postgres solo llegan la API, el worker y el Job de migración</span></label>
+    <p>k3s aplica NetworkPolicies sin instalar nada más. Comprueba que un pod cualquiera ya no conecta al puerto 5432.</p>
+  </div>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="sec-psa"> <span>Pod Security Admission <em>restricted</em> en los namespaces de la app</span></label>
+    <p><code>kubectl label ns vigia-dev pod-security.kubernetes.io/enforce=restricted</code></p>
+    <details class="spoil"><summary>Spoiler · lo que se va a romper</summary>
+      <p>La imagen oficial de Postgres arranca como root para ajustar permisos del volumen. Con <em>restricted</em> tendrás que ejecutarla con <code>runAsUser: 999</code> y <code>fsGroup: 999</code>. Si tus Deployments ya tenían el <code>securityContext</code> de la fase 04, no deberían notar nada.</p>
+    </details>
+  </div>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="sec-threat"> <span><code>docs/threat-model.md</code>: una página</span></label>
+    <p>Qué proteges (datos, credenciales, disponibilidad), quién podría atacar, por dónde (API pública, worker, pipeline, cluster) y qué mitigación tiene cada entrada. Incluye lo que conscientemente <em>no</em> mitigas.</p>
+  </div>
+  <div class="note ok"><span class="lbl">Hecho cuando</span><p>gitleaks no encuentra nada en todo el historial, el pipeline no guarda ninguna clave de AWS, y crear un monitor hacia <code>http://169.254.169.254/</code> devuelve un error.</p></div>
+  <div class="note warn"><span class="lbl">Trampas</span><p>Instalar Vault. mTLS entre servicios. Escribir políticas de Kyverno u OPA a medida. Escáneres de todo tipo sin leer sus resultados.</p></div>
+  <div class="note"><span class="lbl">Para tu CV</span><p>“Seguridad de extremo a extremo: secretos cifrados en git, OIDC sin credenciales estáticas, protección SSRF, NetworkPolicies y Pod Security <em>restricted</em>, con modelo de amenazas documentado.”</p></div>
+
+  <h3>Preguntas de entrevista</h3>
+  <details class="qa"><summary>¿Un Secret de Kubernetes está cifrado?</summary>
+    <p>No por defecto: está en base64, que es una codificación, no un cifrado. Se protege con RBAC, cifrado en reposo de etcd y no guardándolo en git en claro (Sealed Secrets, External Secrets o SOPS).</p></details>
+  <details class="qa"><summary>¿Qué es SSRF y por qué es grave en la nube?</summary>
+    <p>Server-Side Request Forgery: consigues que el servidor haga peticiones por ti a sitios que tú no alcanzas, como servicios internos o el endpoint de metadatos de la nube, que entrega credenciales. Fue la vía del robo de datos de Capital One en 2019.</p></details>
+  <details class="qa"><summary>¿Por qué OIDC en lugar de access keys en el pipeline?</summary>
+    <p>Las credenciales son temporales y ligadas a un repo y rama concretos. No hay nada de larga duración que rotar, filtrar o olvidar en un secreto del repositorio.</p></details>
+</section>
+
+<!-- ============ 08 ============ -->
+<section class="block" id="b-obs" data-track data-est="10">
+  <p class="eyebrow">Fase 08 · Observabilidad · ~10 h</p>
+  <h2>Observabilidad: métricas, SLO y alertas que llegan al móvil</h2>
+  <p class="lead">No se trata de tener gráficas bonitas, sino de saber en pocos minutos que algo va mal, para quién, y qué hacer. Cada alerta tendrá un motivo, un umbral y un runbook.</p>
+  <div class="goals"><strong>Al terminar tendrás</strong>
+    <ul>
+      <li>Métricas propias de la app expuestas en <code>/metrics</code>.</li>
+      <li>Prometheus, Grafana y Alertmanager instalados y recogiendo esas métricas.</li>
+      <li>Un dashboard versionado en git.</li>
+      <li>Dos SLO definidos con sus alertas, que llegan a Discord o Telegram.</li>
+    </ul>
+  </div>
+  <div class="note warn"><span class="lbl">Memoria</span><p>Argo CD, el stack de monitorización y la app juntos aprietan una instancia de 4 GB. Baja la retención de Prometheus a 2–3 días, ajusta recursos y, si no cabe, sube temporalmente a una de 8 GB solo mientras trabajas en esta fase.</p></div>
+
+  <h3>Qué debes hacer</h3>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="obs-metrics"> <span>Instrumenta la app: peticiones, latencia, checks y retraso del worker</span></label>
+    <p>Peticiones por ruta y código de estado, histograma de latencia, checks por resultado y una métrica de negocio clave: cuántos segundos lleva esperando el monitor pendiente más antiguo. Si crece, el worker no da abasto.</p>
+    <details class="spoil"><summary>Spoiler · métricas con prometheus_client</summary>
+<script type="text/x-code" data-lang="py" data-file="src/vigia/metrics.py">
+from prometheus_client import Counter, Gauge, Histogram
+
+REQUESTS = Counter("http_requests_total", "Peticiones HTTP", ["route", "method", "status"])
+LATENCY = Histogram("http_request_duration_seconds", "Latencia HTTP", ["route"],
+                    buckets=[.01, .025, .05, .1, .25, .5, 1, 2.5])
+CHECKS = Counter("vigia_checks_total", "Checks ejecutados", ["result"])  # ok | fail | error
+OLDEST_DUE = Gauge("vigia_oldest_due_seconds", "Espera del monitor pendiente más antiguo")
+</script>
+      <p>En <code>route</code> usa la plantilla (<code>/monitors/{id}</code>), nunca la ruta real: cada id distinto crearía una serie nueva y dispararías la cardinalidad. El worker expone sus métricas en otro puerto con <code>start_http_server</code>.</p>
+    </details>
+  </div>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="obs-stack"> <span>kube-prometheus-stack con Helm (gestionado por Argo CD) y un ServiceMonitor por componente</span></label>
+    <details class="spoil"><summary>Spoiler · la trampa del label</summary>
+      <p>Por defecto, Prometheus solo recoge los ServiceMonitor que llevan el label <code>release</code> con el nombre de la release de Helm del stack. Si tus métricas no aparecen en Targets, casi seguro es esto.</p>
+<script type="text/x-code" data-lang="yaml" data-file="chart/templates/servicemonitor.yaml">
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: vigia-api
+  labels:
+    release: kube-prometheus-stack
+spec:
+  selector:
+    matchLabels: { app: vigia-api }
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 30s
+</script>
+    </details>
+  </div>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="obs-dash"> <span>Un dashboard: tráfico, errores, latencia (método RED) y la salud del worker</span></label>
+    <p>Exporta el JSON y guárdalo en git; cárgalo con un ConfigMap que el sidecar de Grafana detecta. Si el dashboard se pierde al recrear el cluster, no está terminado.</p>
+    <details class="spoil"><summary>Spoiler · consultas PromQL</summary>
+<script type="text/x-code" data-lang="promql" data-file="PromQL">
+# Proporción de errores 5xx en los últimos 5 minutos
+sum(rate(http_requests_total{status=~"5.."}[5m]))
+  / sum(rate(http_requests_total[5m]))
+
+# Latencia p95
+histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket[5m])))
+
+# Checks por resultado, por minuto
+sum by (result) (rate(vigia_checks_total[5m])) * 60
+</script>
+    </details>
+  </div>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="obs-slo"> <span>Define dos SLO en <code>docs/slo.md</code></span></label>
+    <p>Por ejemplo: 99,5 % de peticiones sin error 5xx en 30 días, y p95 de latencia por debajo de 300 ms. Calcula el presupuesto de error: cuántos minutos de fallo te puedes permitir al mes.</p>
+  </div>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="obs-alerts"> <span>Alertas en un <code>PrometheusRule</code> y Alertmanager enviándolas a Discord o Telegram</span></label>
+    <p>Pocas y accionables: tasa de errores alta, latencia fuera del SLO, worker con retraso, API caída. Cada una con <code>runbook_url</code>.</p>
+    <details class="spoil"><summary>Spoiler · regla de ejemplo</summary>
+<script type="text/x-code" data-lang="yaml" data-file="chart/templates/prometheusrule.yaml">
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: vigia
+  labels:
+    release: kube-prometheus-stack
+spec:
+  groups:
+    - name: vigia
+      rules:
+        - alert: VigiaHighErrorRate
+          expr: |
+            sum(rate(http_requests_total{status=~"5.."}[5m]))
+              / sum(rate(http_requests_total[5m])) > 0.05
+          for: 5m
+          labels: { severity: critical }
+          annotations:
+            summary: Más del 5 % de las peticiones fallan
+            runbook_url: https://github.com/tu-usuario/vigia/blob/main/docs/runbooks/high-error-rate.md
+</script>
+      <p>Alertmanager tiene receptores nativos <code>discord_configs</code> y <code>telegram_configs</code>. La URL del webhook es un secreto: séllala.</p>
+    </details>
+  </div>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="obs-logs"> <span>Opcional recomendado: logs en Loki recogidos con Grafana Alloy</span></label>
+    <p>Busca por <code>request_id</code> y salta de una métrica a los logs de ese momento. Promtail está en fin de vida; usa Alloy.</p>
+  </div>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="obs-drill"> <span>Prueba de fuego: tumba Postgres y comprueba que te llega la alerta</span></label>
+    <p><code>kubectl scale statefulset postgres --replicas=0</code>. Cronometra desde el fallo hasta la notificación en el móvil. Restaura y comprueba que llega la resolución.</p>
+  </div>
+  <div class="note ok"><span class="lbl">Hecho cuando</span><p>Tumbas la base de datos y en menos de 5 minutos tienes una notificación en el móvil con enlace al runbook, y el dashboard muestra la caída.</p></div>
+  <div class="note warn"><span class="lbl">Trampas</span><p>Tracing distribuido con un solo servicio. Diez dashboards. Alertas de CPU o memoria sin una acción clara (eso es ruido y te enseña a ignorar alertas). Perseguir el dashboard perfecto en Grafana.</p></div>
+  <div class="note"><span class="lbl">Para tu CV</span><p>“Observabilidad con Prometheus, Grafana y Alertmanager: métricas RED y de negocio, dos SLO con alertas accionables y runbooks; alerta en el móvil en menos de N minutos ante una caída.”</p></div>
+
+  <h3>Preguntas de entrevista</h3>
+  <details class="qa"><summary>¿SLI, SLO y SLA?</summary>
+    <p>SLI es lo que mides (porcentaje de peticiones correctas). SLO es tu objetivo interno para ese SLI (99,5 % en 30 días). SLA es el compromiso contractual con penalizaciones, siempre más laxo que el SLO. El presupuesto de error es lo que te queda entre el 100 % y el SLO: si se agota, se frenan los despliegues y se prioriza fiabilidad.</p></details>
+  <details class="qa"><summary>¿Por qué percentiles y no la media?</summary>
+    <p>La media esconde la cola: con un 95 % de peticiones a 50 ms y un 5 % a 5 s, la media parece aceptable mientras uno de cada veinte usuarios sufre. El p95 o p99 muestran la experiencia de los peores casos.</p></details>
+  <details class="qa"><summary>¿Qué es la cardinalidad y por qué importa?</summary>
+    <p>El número de series distintas que genera una métrica: una por cada combinación de valores de sus labels. Un label con ids de usuario o rutas reales puede crear millones de series y tumbar Prometheus.</p></details>
+</section>
+
+<!-- ============ 09 ============ -->
+<section class="block" id="b-rel" data-track data-est="8">
+  <p class="eyebrow">Fase 09 · Fiabilidad · ~8 h</p>
+  <h2>Fiabilidad y operación: carga, backups, caos y postmortem</h2>
+  <p class="lead">Aquí obtienes las cifras que harán creíble todo lo anterior: cuánto aguanta, cuánto tarda en recuperarse, cuántos datos puedes perder. Y practicas lo que hace un equipo de guardia cuando algo se rompe.</p>
+  <div class="goals"><strong>Al terminar tendrás</strong>
+    <ul>
+      <li>Una prueba de carga con umbrales y resultados apuntados.</li>
+      <li>Autoescalado de la API observado bajo carga.</li>
+      <li>Backups diarios a S3 y una restauración probada y cronometrada.</li>
+      <li>Runbooks para cada alerta y un postmortem de un incidente simulado.</li>
+    </ul>
+  </div>
+
+  <h3>Qué debes hacer</h3>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="rel-k6"> <span>Prueba de carga con k6 contra dev</span></label>
+    <p>Sube la carga por etapas hasta encontrar dónde se rompe el SLO. Apunta las peticiones por segundo sostenidas y el p95.</p>
+    <details class="spoil"><summary>Spoiler · script de k6</summary>
+<script type="text/x-code" data-lang="js" data-file="load/smoke.js">
+import http from 'k6/http';
+import { check, sleep } from 'k6';
+
+export const options = {
+  stages: [
+    { duration: '1m', target: 20 },
+    { duration: '3m', target: 100 },
+    { duration: '1m', target: 0 },
+  ],
+  thresholds: {
+    http_req_failed: ['rate<0.01'],
+    http_req_duration: ['p(95)<300'],
+  },
+};
+
+export default function () {
+  const res = http.get(`${__ENV.BASE_URL}/monitors`);
+  check(res, { 'status 200': (r) => r.status === 200 });
+  sleep(1);
+}
+</script>
+    </details>
+  </div>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="rel-hpa"> <span>HPA en la API por CPU y PodDisruptionBudget</span></label>
+    <p>Repite la prueba de carga y observa el escalado en Grafana. k3s trae metrics-server, que es lo que necesita el HPA.</p>
+    <details class="spoil"><summary>Spoiler · dos trampas</summary>
+      <p>El porcentaje de utilización se calcula sobre los <code>requests</code>: sin requests, el HPA no funciona. Y quita <code>replicas</code> del Deployment cuando lo gestione un HPA; si no, Argo CD y el HPA se pelean por el número de réplicas en cada sincronización.</p>
+<script type="text/x-code" data-lang="yaml" data-file="chart/templates/hpa.yaml">
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: vigia-api
+spec:
+  scaleTargetRef: { apiVersion: apps/v1, kind: Deployment, name: vigia-api }
+  minReplicas: 2
+  maxReplicas: 6
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target: { type: Utilization, averageUtilization: 70 }
+</script>
+    </details>
+  </div>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="rel-backup"> <span>CronJob diario de <code>pg_dump</code> a S3, con caducidad automática de los antiguos</span></label>
+    <p>Bucket propio, regla de ciclo de vida (por ejemplo, 7 días) y una credencial que solo pueda escribir en ese prefijo.</p>
+    <details class="spoil"><summary>Spoiler · el problema de las credenciales</summary>
+      <p>En la fase 05 pusiste el hop limit del IMDS a 1, así que los pods no pueden usar el rol de la instancia. Es una decisión real con dos salidas:</p>
+      <ul>
+        <li>Un usuario IAM cuyo único permiso es <code>s3:PutObject</code> en ese prefijo, con las claves en un SealedSecret y rotación periódica. Simple.</li>
+        <li>Hop limit 2 y una NetworkPolicy que bloquea la salida a <code>169.254.169.254</code> a todos los pods menos al del backup. Sin claves, pero más fácil de romper sin darte cuenta.</li>
+      </ul>
+      <p>Elige una y escríbela en un ADR. Ojo también: <code>pg_dump</code> no entiende el esquema <code>postgresql+psycopg://</code> de tu <code>DATABASE_URL</code>; pásale los datos de conexión por separado.</p>
+    </details>
+  </div>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="rel-restore"> <span>Restaura un backup en una base de datos aparte y cronometra todo el proceso</span></label>
+    <p>Un backup que nunca has restaurado no es un backup. El tiempo total es tu RTO; la antigüedad máxima del último backup, tu RPO.</p>
+    <details class="spoil"><summary>Spoiler · comandos</summary>
+<script type="text/x-code" data-lang="sh" data-file="docs/runbooks/restore.md">
+$ aws s3 cp s3://vigia-backups/daily/vigia-2026-11-03.dump .
+$ kubectl -n vigia-prod port-forward svc/postgres 5432:5432 &
+$ createdb -h localhost -U vigia vigia_restore
+$ pg_restore -h localhost -U vigia -d vigia_restore vigia-2026-11-03.dump
+$ psql -h localhost -U vigia -d vigia_restore -c "select count(*) from checks;"
+</script>
+    </details>
+  </div>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="rel-chaos"> <span>Caos manual con tráfico: borra pods, reinicia el nodo, llena el disco de Postgres</span></label>
+    <p>Para cada prueba, anota qué esperabas, qué pasó, cuánto duró el impacto y qué cambiarías. No necesitas Chaos Mesh: <code>kubectl delete pod</code> y <code>sudo reboot</code> bastan.</p>
+  </div>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="rel-runbooks"> <span>Un runbook por alerta en <code>docs/runbooks/</code></span></label>
+    <p>Qué significa, cómo confirmar que es real, cómo mitigar ya, cómo arreglarlo de verdad y a quién avisar. Escrito para alguien que lo lee a las 3 de la mañana.</p>
+  </div>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="rel-postmortem"> <span>Simulacro de incidente y postmortem sin culpables</span></label>
+    <p>Rompe algo sin mirar cómo (por ejemplo, pide a alguien que cambie una variable en <code>values-prod.yaml</code>), resuélvelo usando solo tus alertas y runbooks, y escribe el postmortem.</p>
+    <details class="spoil"><summary>Spoiler · plantilla</summary>
+<script type="text/x-code" data-lang="txt" data-file="docs/postmortems/2026-11-20-db-connection-exhaustion.md">
+# Postmortem: agotamiento de conexiones a la base de datos (2026-11-20)
+
+Resumen: qué pasó, en dos frases.
+Impacto: quién lo notó, cuánto duró, qué porcentaje de peticiones falló.
+Línea temporal: hh:mm inicio · hh:mm alerta · hh:mm diagnóstico · hh:mm mitigado · hh:mm resuelto
+Causa raíz: el porqué técnico y el porqué del proceso que lo permitió.
+Qué funcionó y qué no: alertas, runbooks, herramientas.
+Acciones: tarea · responsable · fecha.
+
+Sin culpables: se arreglan sistemas y procesos, no personas.
+</script>
+    </details>
+  </div>
+  <div class="note ok"><span class="lbl">Hecho cuando</span><p>Tienes cifras reales (peticiones por segundo, p95, RTO, RPO) apuntadas para el README y un postmortem escrito con acciones.</p></div>
+  <div class="note warn"><span class="lbl">Trampas</span><p>Chaos Mesh o Litmus. Alta disponibilidad multi-nodo. Optimizar el código antes de medir. Hacer pruebas de carga contra prod sin avisarte a ti mismo en las alertas.</p></div>
+  <div class="note"><span class="lbl">Para tu CV</span><p>“Pruebas de carga con k6 (N peticiones/s con p95 &lt; 300 ms), autoescalado, backups con restauración verificada (RTO N min, RPO 24 h), runbooks y postmortem de un incidente simulado.”</p></div>
+
+  <h3>Preguntas de entrevista</h3>
+  <details class="qa"><summary>¿RTO y RPO?</summary>
+    <p>RTO (Recovery Time Objective): cuánto puedes tardar en recuperar el servicio. RPO (Recovery Point Objective): cuántos datos puedes perder, medido en tiempo. Con un backup diario, tu RPO es de hasta 24 horas; bajarlo exige backups continuos (WAL) o réplicas.</p></details>
+  <details class="qa"><summary>¿Para qué sirve un PodDisruptionBudget?</summary>
+    <p>Limita cuántos pods de una aplicación pueden caer a la vez por interrupciones voluntarias, como vaciar un nodo para mantenimiento. No protege frente a fallos involuntarios, como que el nodo muera.</p></details>
+  <details class="qa"><summary>¿Qué hace bueno a un postmortem?</summary>
+    <p>Que no busca culpables sino causas en el sistema, tiene una línea temporal precisa, separa mitigación de arreglo, y termina con acciones concretas con responsable y fecha que alguien revisa después.</p></details>
+</section>
+
+<!-- ============ 10 ============ -->
+<section class="block" id="b-cv" data-track data-est="6">
+  <p class="eyebrow">Fase 10 · Portfolio · ~6 h</p>
+  <h2>Convertir el proyecto en portfolio y CV</h2>
+  <p class="lead">Quien revise tu perfil dedicará unos minutos, no va a clonar el repo y la infraestructura estará apagada. Todo lo que hiciste tiene que verse en el README, en un vídeo corto y en tres líneas de CV con números.</p>
+  <div class="goals"><strong>Al terminar tendrás</strong>
+    <ul>
+      <li>Un README que funciona como caso de estudio.</li>
+      <li>Un vídeo de 2–3 minutos con el sistema funcionando.</li>
+      <li>Infraestructura bajo demanda: todo se recrea con un comando.</li>
+      <li>Las líneas del CV y una historia de 5 minutos para entrevistas.</li>
+    </ul>
+  </div>
+
+  <h3>Qué debes hacer</h3>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="cv-readme"> <span>README como caso de estudio</span></label>
+    <ul>
+      <li><strong>Qué es</strong>, en dos frases, y un GIF o captura arriba del todo.</li>
+      <li><strong>Arquitectura:</strong> un diagrama. GitHub renderiza Mermaid directamente en el README.</li>
+      <li><strong>Decisiones:</strong> enlaces a los ADR, cada uno con una línea de resumen.</li>
+      <li><strong>Resultados con cifras:</strong> tamaño de imagen, duración del pipeline, minutos de commit a producción, tiempo de recrear la infraestructura, peticiones por segundo, RTO y RPO.</li>
+      <li><strong>Cómo ejecutarlo:</strong> en local con <code>make up</code> y en la nube con <code>make demo</code>.</li>
+      <li><strong>Qué haría distinto en una empresa</strong> y <strong>Roadmap</strong> (tu <code>IDEAS.md</code>).</li>
+    </ul>
+  </div>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="cv-video"> <span>Vídeo de 2–3 minutos</span></label>
+    <p>Un cambio pequeño en una PR → pipeline en verde → Argo CD sincronizando → el cambio en producción → romper algo → alerta en el móvil → rollback. Sin música ni edición elaborada; habla tú.</p>
+  </div>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="cv-demo"> <span><code>make demo</code>: levanta todo desde cero, y cronométralo</span></label>
+    <p>Infraestructura, k3s, Argo CD, Sealed Secrets (con la clave guardada) y la app. “Recreo todo el entorno en 15 minutos con un comando” es una frase muy potente en una entrevista.</p>
+  </div>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="cv-cost"> <span><code>docs/costs.md</code>: cuánto cuesta y cómo lo redujiste</span></label>
+    <p>Coste por hora encendido, coste mensual si estuviera siempre encendido, y las decisiones que lo abaratan. La conciencia de costes es un diferenciador real.</p>
+  </div>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="cv-lines"> <span>Escribe las líneas del CV con tus cifras reales</span></label>
+    <p>Mira los ejemplos de abajo, pero sustituye cada N por lo que mediste. Un número inventado se cae a la segunda pregunta.</p>
+  </div>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="cv-post"> <span>Publica un artículo o post sobre una parte concreta</span></label>
+    <p>No “hice un proyecto DevOps”, sino algo como “cómo protegí un worker contra SSRF en Kubernetes” o “lo que aprendí restaurando mi primer backup”. Uno concreto atrae más que uno general.</p>
+  </div>
+  <div class="task">
+    <label class="chk"><input type="checkbox" data-t="cv-destroy"> <span>Destruye todo y comprueba en la facturación que el coste vuelve a cero</span></label>
+  </div>
+
+  <h3>Ejemplos de líneas para el CV</h3>
+  <div class="note"><span class="lbl">En español</span>
+    <ul>
+      <li>Diseñé y operé de punta a punta un servicio de monitorización (Python/FastAPI, PostgreSQL) en Kubernetes (k3s) sobre AWS, con infraestructura en Terraform y despliegue GitOps con Argo CD: de commit a producción en menos de N minutos.</li>
+      <li>Pipeline CI/CD en GitHub Actions con tests de integración, escaneo de vulnerabilidades y OIDC sin credenciales estáticas; imagen reducida de N MB a N MB.</li>
+      <li>Observabilidad con Prometheus y Grafana: dos SLO con alertas y runbooks, pruebas de carga con k6 (N peticiones/s) y restauración de backups verificada (RTO de N minutos).</li>
+    </ul>
+  </div>
+  <div class="note"><span class="lbl">In English</span>
+    <ul>
+      <li>Built and operated an end-to-end uptime monitoring service (Python/FastAPI, PostgreSQL) on Kubernetes (k3s) on AWS, provisioned with Terraform and deployed via GitOps with Argo CD: commit to production in under N minutes.</li>
+      <li>CI/CD pipeline on GitHub Actions with integration tests, vulnerability scanning and OIDC-based cloud access with no static credentials; reduced image size from N MB to N MB.</li>
+      <li>Observability with Prometheus and Grafana: two SLOs with actionable alerts and runbooks, k6 load tests (N req/s) and verified backup restores (N-minute RTO).</li>
+    </ul>
+  </div>
+
+  <h3>Extras que hacen destacar el proyecto</h3>
+  <p>Solo cuando las fases 00–10 estén cerradas. Ordenados por lo que aportan frente a lo que cuestan.</p>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Extra</th><th>Qué demuestra</th><th class="num">Coste</th><th>Prioridad</th></tr></thead>
+      <tbody>
+        <tr><td>Vídeo, ADRs, postmortem y cifras en el README</td><td>Comunicación y criterio (ya incluidos arriba)</td><td class="num">—</td><td>Imprescindible</td></tr>
+        <tr><td>Escalar el worker con KEDA según <code>vigia_oldest_due_seconds</code></td><td>Autoescalado por métrica de negocio, no por CPU</td><td class="num">~4 h</td><td>Alta</td></tr>
+        <tr><td>Firma de imágenes con cosign y SBOM con syft</td><td>Seguridad de la cadena de suministro</td><td class="num">~3 h</td><td>Alta</td></tr>
+        <tr><td>Releases semánticas con release-please y CHANGELOG</td><td>Disciplina de versionado</td><td class="num">~2 h</td><td>Media</td></tr>
+        <tr><td>Canary con Argo Rollouts guiado por métricas</td><td>Despliegue progresivo con rollback automático</td><td class="num">~6 h</td><td>Media</td></tr>
+        <tr><td>Postgres con CloudNativePG y backups continuos</td><td>Operadores y un RPO de minutos</td><td class="num">~6 h</td><td>Media</td></tr>
+        <tr><td>Política que solo admite imágenes firmadas (Kyverno)</td><td>Control de admisión</td><td class="num">~4 h</td><td>Media-baja</td></tr>
+        <tr><td>Entornos efímeros por PR</td><td>Plataforma interna avanzada</td><td class="num">8+ h</td><td>Baja</td></tr>
+        <tr><td>Tracing con OpenTelemetry</td><td>Poco valor con un solo servicio</td><td class="num">~4 h</td><td>Baja</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="note warn"><span class="lbl">No añadas</span><p>Service mesh, multi-nube, partir la app en microservicios, EKS “porque sí”, Vault o un frontend. Restan foco y no cambian la impresión que causa el proyecto. Si quieres hacer otro proyecto después, que pruebe algo distinto: por ejemplo, una plataforma interna o un operador de Kubernetes.</p></div>
+
+  <h3>La historia de 5 minutos para entrevistas</h3>
+  <ol>
+    <li><strong>El problema</strong> en una frase y la arquitectura en un diagrama.</li>
+    <li><strong>Una decisión difícil</strong> con su trade-off: k3s frente a EKS, o las credenciales de los backups.</li>
+    <li><strong>Algo que se rompió</strong> y cómo lo diagnosticaste: tu diario de errores o el postmortem.</li>
+    <li><strong>Los números:</strong> minutos de commit a producción, RTO, coste.</li>
+    <li><strong>Qué harías distinto</strong> con un equipo y presupuesto reales.</li>
+  </ol>
+  <div class="note ok"><span class="lbl">Hecho cuando</span><p>Alguien que no te conoce entiende en 3 minutos qué hiciste y cómo, sin clonar nada, y la infraestructura está destruida con coste cero.</p></div>
+</section>
+
+<!-- ============ REF ============ -->
+<section class="block" id="b-ref">
+  <p class="eyebrow">Anexo · Para volver siempre</p>
+  <h2>Recursos, chuleta de comandos y glosario</h2>
+
+  <h3>Recursos</h3>
+  <div class="res-grid">
+    <div class="rcard"><h4>Fundamentos</h4><ul>
+      <li><a href="https://12factor.net/es/" target="_blank" rel="noopener">The Twelve-Factor App</a><span>Las reglas de una app desplegable en la nube. Corto y en español.</span></li>
+      <li><a href="https://sre.google/books/" target="_blank" rel="noopener">Libros de SRE de Google</a><span>Gratuitos en línea. Los capítulos de SLO, alertas y postmortems.</span></li>
+      <li><a href="https://adr.github.io" target="_blank" rel="noopener">Architecture Decision Records</a><span>Plantillas y ejemplos de ADR.</span></li>
+      <li><a href="terraform-desde-cero.html">Terraform desde cero</a><span>El atlas de este mismo sitio, para la fase 05.</span></li>
+    </ul></div>
+    <div class="rcard"><h4>Contenedores y CI</h4><ul>
+      <li><a href="https://docs.docker.com/build/building/best-practices/" target="_blank" rel="noopener">Buenas prácticas de Docker build</a><span>Multi-stage, caché de capas, usuarios.</span></li>
+      <li><a href="https://docs.github.com/en/actions" target="_blank" rel="noopener">Documentación de GitHub Actions</a><span>Incluye la guía de endurecimiento de seguridad y OIDC.</span></li>
+      <li><a href="https://trivy.dev" target="_blank" rel="noopener">Trivy</a><span>Escáner de imágenes, configuración y secretos.</span></li>
+    </ul></div>
+    <div class="rcard"><h4>Kubernetes y GitOps</h4><ul>
+      <li><a href="https://kubernetes.io/docs/home/" target="_blank" rel="noopener">Documentación de Kubernetes</a><span>Conceptos y tareas. La sección de probes y recursos, imprescindible.</span></li>
+      <li><a href="https://docs.k3s.io" target="_blank" rel="noopener">k3s</a> y <a href="https://k3d.io" target="_blank" rel="noopener">k3d</a><span>Instalación, opciones del servidor y red.</span></li>
+      <li><a href="https://helm.sh/docs/" target="_blank" rel="noopener">Helm</a><span>Plantillas, values y hooks.</span></li>
+      <li><a href="https://argo-cd.readthedocs.io" target="_blank" rel="noopener">Argo CD</a><span>Applications, sincronización y hooks.</span></li>
+      <li><a href="https://github.com/bitnami-labs/sealed-secrets" target="_blank" rel="noopener">Sealed Secrets</a><span>Instalación, kubeseal y copia de la clave.</span></li>
+    </ul></div>
+    <div class="rcard"><h4>Observabilidad y fiabilidad</h4><ul>
+      <li><a href="https://prometheus.io/docs/practices/naming/" target="_blank" rel="noopener">Buenas prácticas de Prometheus</a><span>Nombres, labels e histogramas.</span></li>
+      <li><a href="https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack" target="_blank" rel="noopener">kube-prometheus-stack</a><span>El chart y sus values.</span></li>
+      <li><a href="https://grafana.com/docs/k6/latest/" target="_blank" rel="noopener">k6</a><span>Pruebas de carga con umbrales.</span></li>
+    </ul></div>
+  </div>
+
+  <h3>Chuleta de comandos</h3>
+  <div class="tbl-wrap">
+    <table class="cheat">
+      <thead><tr><th>Comando</th><th>Para qué</th></tr></thead>
+      <tbody>
+        <tr><td>docker build -t vigia:dev .</td><td>Construir la imagen local</td></tr>
+        <tr><td>docker history vigia:dev</td><td>Ver qué capa pesa cada cosa</td></tr>
+        <tr><td>docker compose up -d --build</td><td>Levantar el entorno local reconstruyendo</td></tr>
+        <tr><td>k3d cluster create vigia -p "8080:80@loadbalancer"</td><td>Cluster local con el puerto 80 expuesto en 8080</td></tr>
+        <tr><td>k3d image import vigia:dev -c vigia</td><td>Cargar una imagen local en el cluster</td></tr>
+        <tr><td>kubectl get pods -A -w</td><td>Ver todos los pods en tiempo real</td></tr>
+        <tr><td>kubectl describe pod NAME</td><td>Eventos: por qué no arranca o se reinicia</td></tr>
+        <tr><td>kubectl logs deploy/vigia-api -f</td><td>Logs de un Deployment</td></tr>
+        <tr><td>kubectl logs POD --previous</td><td>Logs del contenedor anterior a un reinicio</td></tr>
+        <tr><td>kubectl rollout status deploy/vigia-api</td><td>Esperar a que termine un despliegue</td></tr>
+        <tr><td>kubectl port-forward svc/NAME 8080:80</td><td>Acceder a un Service desde tu máquina</td></tr>
+        <tr><td>kubectl top pods</td><td>Consumo real de CPU y memoria</td></tr>
+        <tr><td>kubectl run tmp --rm -it --image=busybox -- sh</td><td>Pod de depuración desechable</td></tr>
+        <tr><td>helm template . -f values-dev.yaml</td><td>Ver lo que generaría el chart</td></tr>
+        <tr><td>helm upgrade --install vigia . -f values-dev.yaml</td><td>Instalar o actualizar una release</td></tr>
+        <tr><td>argocd app get vigia-dev</td><td>Estado de sincronización y salud</td></tr>
+        <tr><td>argocd app diff vigia-dev</td><td>Diferencias entre git y el cluster</td></tr>
+        <tr><td>kubeseal --raw --namespace NS --name N --from-file=/dev/stdin</td><td>Cifrar un valor para un SealedSecret</td></tr>
+        <tr><td>terraform plan -out=tfplan &amp;&amp; terraform apply tfplan</td><td>Aplicar exactamente lo revisado</td></tr>
+        <tr><td>k6 run -e BASE_URL=https://... load/smoke.js</td><td>Lanzar la prueba de carga</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Glosario</h3>
+  <dl class="gloss">
+    <dt>CI / CD</dt><dd>Integración continua: cada cambio se construye y prueba. Entrega o despliegue continuo: cada cambio queda listo o sale solo a producción.</dd>
+    <dt>GitOps</dt><dd>Git es la fuente de verdad del estado del cluster y un agente dentro de él lo aplica y corrige el drift.</dd>
+    <dt>Tag inmutable</dt><dd>Etiqueta de imagen que nunca se reutiliza, como el SHA del commit.</dd>
+    <dt>Liveness</dt><dd>Comprobación de que el proceso vive. Si falla, Kubernetes reinicia el contenedor.</dd>
+    <dt>Readiness</dt><dd>Comprobación de que puede atender tráfico. Si falla, deja de recibirlo.</dd>
+    <dt>Rolling update</dt><dd>Sustitución gradual de réplicas viejas por nuevas sin cortar el servicio.</dd>
+    <dt>Helm hook</dt><dd>Recurso del chart que se ejecuta en un momento concreto, como antes de actualizar.</dd>
+    <dt>OIDC</dt><dd>Federación de identidad: el pipeline obtiene credenciales temporales sin guardar claves.</dd>
+    <dt>SSRF</dt><dd>Ataque que hace que el servidor envíe peticiones a destinos internos en nombre del atacante.</dd>
+    <dt>IMDS</dt><dd>Servicio de metadatos de EC2; entrega, entre otras cosas, las credenciales del rol de la instancia.</dd>
+    <dt>SLI / SLO / SLA</dt><dd>Lo que mides / tu objetivo interno / el compromiso contractual.</dd>
+    <dt>Error budget</dt><dd>Margen de fallo que permite el SLO; al agotarse, se prioriza la fiabilidad.</dd>
+    <dt>RED</dt><dd>Rate, Errors, Duration: las tres señales básicas de un servicio.</dd>
+    <dt>Cardinalidad</dt><dd>Número de series distintas de una métrica según sus labels.</dd>
+    <dt>RTO / RPO</dt><dd>Tiempo máximo para recuperar el servicio / datos máximos que puedes perder.</dd>
+    <dt>Runbook</dt><dd>Instrucciones para responder a una alerta concreta.</dd>
+    <dt>Postmortem</dt><dd>Análisis escrito de un incidente, sin culpables y con acciones.</dd>
+    <dt>ADR</dt><dd>Documento corto que registra una decisión de arquitectura y su porqué.</dd>
+  </dl>
+  <footer class="end">Versiones citadas a modo de ejemplo (Python 3.13, Postgres 17, actions v3–v6). Usa las actuales cuando empieces y fíjalas. Ante la duda, la documentación oficial manda.</footer>
+</section>
+</main>
+</div>
+
+<script>
+(() => {
+'use strict';
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const REDUCE = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const sleep = ms => new Promise(r => setTimeout(r, REDUCE ? 0 : ms));
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* storage unavailable */ } }
+};
+const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+/* ---------- highlighting: comments, strings and a few keywords per language ---------- */
+const KW = {
+  py: 'def|return|import|from|as|with|for|in|if|elif|else|try|except|while|class|not|and|or|None|True|False|raise',
+  sql: 'WITH|SELECT|FROM|WHERE|ORDER BY|LIMIT|FOR UPDATE|SKIP LOCKED|UPDATE|SET|RETURNING|AS',
+  docker: 'FROM|AS|RUN|COPY|WORKDIR|USER|ENV|CMD|ENTRYPOINT|EXPOSE|ARG',
+  hcl: 'resource|data|variable|output|locals|module|provider|terraform|backend|statement|principals|condition|metadata_options|root_block_device',
+  js: 'import|from|export|const|function|return|default',
+  promql: 'sum|rate|by|histogram_quantile'
+};
+const COMMENT = { sql: '--', js: '//', txt: '' };
+const LABEL = { sh: 'shell', yaml: 'YAML', py: 'Python', sql: 'SQL', docker: 'Dockerfile', hcl: 'HCL', js: 'JavaScript', promql: 'PromQL', txt: 'texto' };
+const STR = String.raw`"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'`;
+function hl(src, lang) {
+  const cm = lang in COMMENT ? COMMENT[lang] : '#';
+  if (lang === 'txt') return esc(src);
+  const kw = KW[lang];
+  const re = new RegExp(`(${STR})` + (kw ? String.raw`|\b(${kw})\b` : ''), 'g');
+  return src.split('\n').map(line => {
+    let q = null, cut = -1;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (q) { if (ch === '\\') i++; else if (ch === q) q = null; }
+      else if (ch === '"' || ch === "'") q = ch;
+      else if (cm && line.startsWith(cm, i) && (i === 0 || /\s/.test(line[i - 1]))) { cut = i; break; }
+    }
+    const code = cut < 0 ? line : line.slice(0, cut);
+    const com = cut < 0 ? '' : line.slice(cut);
+    let h = esc(code).replace(re, (m, s, k) => s ? `<span class="t-s">${s}</span>` : `<span class="t-k">${k}</span>`);
+    if (lang === 'yaml') h = h.replace(/^(\s*-?\s*)([\w.\/-]+)(:)(?=\s|$)/, '$1<span class="t-a">$2</span>$3');
+    if (lang === 'sh') h = h.replace(/^(\s*)\$ /, '$1<span class="t-p">$</span> ');
+    return h + (com ? `<span class="t-c">${esc(com)}</span>` : '');
+  }).join('\n');
+}
+function copyText(text, btn, pre) {
+  const done = msg => { btn.textContent = msg; setTimeout(() => { btn.textContent = 'Copiar'; }, 1600); };
+  const fallback = () => {
+    const r = document.createRange(); r.selectNodeContents(pre);
+    const s = getSelection(); s.removeAllRanges(); s.addRange(r);
+    done('Seleccionado');
+  };
+  try { navigator.clipboard.writeText(text).then(() => done('Copiado'), fallback); } catch { fallback(); }
+}
+$$('script[type="text/x-code"]').forEach(sc => {
+  const raw = sc.textContent.replace(/^\n/, '').replace(/\s+$/, '');
+  const lang = sc.dataset.lang || 'sh';
+  const fig = document.createElement('figure');
+  fig.className = 'codebox';
+  const cap = document.createElement('figcaption');
+  cap.innerHTML = `<span>${esc(sc.dataset.file || LABEL[lang] || '')}</span><button type="button" class="copy">Copiar</button>`;
+  const pre = document.createElement('pre');
+  pre.className = 'code';
+  const code = document.createElement('code');
+  code.innerHTML = hl(raw, lang);
+  pre.append(code);
+  fig.append(cap, pre);
+  sc.replaceWith(fig);
+  // Copy without the "$ " prompt so shell snippets paste straight into a terminal
+  const clean = lang === 'sh' ? raw.replace(/^(\s*)\$ /gm, '$1') : raw;
+  cap.querySelector('.copy').addEventListener('click', e => copyText(clean, e.currentTarget, pre));
+});
+
+/* ---------- tasks & progress ---------- */
+const titleOf = v => { const a = $(`.toc a[href="#${v.id}"]`); return a ? a.lastChild.textContent.trim() : v.id; };
+const tracked = $$('section.block[data-track]');
+const tasks = $$('input[data-t]');
+const checked = store.get('devops-tasks', {});
+function paintProgress() {
+  const n = tasks.filter(t => t.checked).length;
+  tracked.forEach(sec => {
+    const own = $$('input[data-t]', sec);
+    const a = $(`.toc a[href="#${sec.id}"]`);
+    if (a) a.classList.toggle('is-done', own.length > 0 && own.every(t => t.checked));
+  });
+  $('#prog-fill').style.width = (tasks.length ? n / tasks.length * 100 : 0) + '%';
+  $('#prog-txt').textContent = `${n} / ${tasks.length} tareas completadas`;
+  window.atlasProgress?.(n, tasks.length, 'tareas');
+}
+tasks.forEach(cb => {
+  cb.checked = !!checked[cb.dataset.t];
+  cb.addEventListener('change', () => {
+    if (cb.checked) checked[cb.dataset.t] = true; else delete checked[cb.dataset.t];
+    store.set('devops-tasks', checked);
+    paintProgress();
+  });
+});
+paintProgress();
+
+/* ---------- hours log vs. estimate ---------- */
+const hours = store.get('devops-hours', {});
+const fmt = n => n.toLocaleString('es-ES', { maximumFractionDigits: 1 });
+const phases = $$('section.block[data-est]');
+function verdict(h, est) {
+  if (!h) return ['', '—', `Estimado: ~${fmt(est)} h. Apunta tus horas al final de cada sesión.`];
+  const r = h / est;
+  if (r <= 1) return ['ok', 'en presupuesto', `${fmt(h)} de ~${fmt(est)} h. Dentro del presupuesto.`];
+  if (r <= 1.5) return ['near', 'ajustado', `${fmt(h)} de ~${fmt(est)} h. Te estás pasando: cierra el “Hecho cuando” con lo mínimo y avanza.`];
+  return ['over', 'pasado', `${fmt(h)} de ~${fmt(est)} h, más de 1,5×. Para: recorta alcance, apunta lo pendiente en IDEAS.md y pasa a la siguiente fase.`];
+}
+function paintHours() {
+  let est = 0, real = 0;
+  const rows = phases.map(sec => {
+    const e = +sec.dataset.est, h = hours[sec.id] || 0;
+    est += e; real += h;
+    const [cls, label, msg] = verdict(h, e);
+    const box = $('.hours', sec);
+    box.className = 'hours' + (cls ? ' ' + cls : '');
+    $('.h-msg', box).textContent = msg;
+    return `<tr><td><a href="#${sec.id}">${esc(titleOf(sec))}</a></td><td class="num">~${fmt(e)} h</td><td class="num">${h ? fmt(h) + ' h' : '—'}</td><td><span class="pill ${cls}">${label}</span></td></tr>`;
+  });
+  $('#budget').innerHTML = rows.join('');
+  $('#budget-est').textContent = `~${fmt(est)} h`;
+  $('#budget-real').textContent = real ? `${fmt(real)} h` : '—';
+  $('#budget-state').textContent = real ? `${Math.round(real / est * 100)} % del total` : '';
+}
+phases.forEach(sec => {
+  const box = document.createElement('div');
+  box.className = 'hours';
+  box.innerHTML = '<label>Horas dedicadas <input type="number" min="0" step="0.5" inputmode="decimal"></label><p class="h-msg" aria-live="polite"></p>';
+  const input = $('input', box);
+  if (hours[sec.id]) input.value = hours[sec.id];
+  input.addEventListener('input', () => {
+    const v = parseFloat(input.value);
+    if (v > 0) hours[sec.id] = v; else delete hours[sec.id];
+    store.set('devops-hours', hours);
+    paintHours();
+  });
+  sec.append(box);
+});
+paintHours();
+
+/* ---------- one view per phase, routed by #hash, resuming the last one ---------- */
+const toc = $('#toc');
+const narrow = matchMedia('(max-width: 980px)');
+if (narrow.matches) toc.open = false;
+$$('.toc a').forEach(a => a.addEventListener('click', () => { if (narrow.matches) toc.open = false; }));
+const views = $$('main > header, main > section');
+views.forEach((v, i) => {
+  const prev = views[i - 1], next = views[i + 1];
+  const link = (t, cls, lbl) => `<a class="${cls}" href="#${t.id}"><small>${lbl}</small>${esc(titleOf(t))}</a>`;
+  const nav = document.createElement('nav');
+  nav.className = 'pager';
+  nav.setAttribute('aria-label', 'Navegación entre fases');
+  nav.innerHTML = (prev ? link(prev, 'prev', '← Anterior') : '') + (next ? link(next, 'next', i === 0 ? 'Empezar →' : 'Siguiente →') : '');
+  v.append(nav);
+});
+function showView(id, jump) {
+  const t = views.find(v => v.id === id) || views[0];
+  views.forEach(v => { v.hidden = v !== t; });
+  $$('.toc a').forEach(a => a.classList.toggle('is-current', a.getAttribute('href') === '#' + t.id));
+  if (jump) window.scrollTo({ top: 0, behavior: 'instant' });
+  store.set('devops-last', t.id);
+}
+addEventListener('hashchange', () => showView(location.hash.slice(1), true));
+const lastView = store.get('devops-last', '');
+if (!location.hash && views.some(v => v.id === lastView)) try { history.replaceState(null, '', '#' + lastView); } catch { /* keep first view */ }
+showView(location.hash.slice(1), false);
+window.atlasRouted?.();
+
+/* ---------- hero terminal ---------- */
+(async function hero() {
+  const out = $('#hero-term');
+  const lines = [
+    '$ git push origin feat/readyz',
+    '$ gh pr merge --squash',
+    '',
+    '✓ lint    ruff check              12s',
+    '✓ test    pytest + postgres       48s',
+    '✓ build   linux/arm64          1m 31s',
+    '✓ scan    trivy: 0 critical        9s',
+    '→ ghcr.io/tu-usuario/vigia:sha-3f9c2e1',
+    '→ vigia-deploy: deploy(dev): sha-3f9c2e1',
+    '',
+    '$ argocd app get vigia-dev',
+    'Sync Status:    Synced to 3f9c2e1',
+    'Health Status:  Healthy',
+    '',
+    '$ curl -s https://vigia.tu-dominio.dev/readyz',
+    '{"status":"ok","db":"ok"}'
+  ];
+  const cls = l => l.startsWith('✓') ? 't-add' : l.startsWith('→') ? 't-read' : /^(Sync|Health) Status/.test(l) ? 't-b' : l.startsWith('{') ? 't-s' : '';
+  const html = l => { const c = cls(l); return c ? `<span class="${c}">${esc(l)}</span>` : esc(l); };
+  if (REDUCE) { out.innerHTML = lines.map(l => l.startsWith('$ ') ? `<span class="t-cmd">${esc(l)}</span>` : html(l)).join('\n'); return; }
+  for (const l of lines) {
+    if (l.startsWith('$ ')) {
+      const span = document.createElement('span');
+      span.className = 't-cmd';
+      out.append(span);
+      for (const ch of l) { span.textContent += ch; await sleep(26); }
+      out.append('\n');
+      await sleep(380);
+    } else {
+      out.insertAdjacentHTML('beforeend', html(l) + '\n');
+      await sleep(l ? 260 : 80);
+    }
+  }
+})();
+})();
+</script>
+</body>
+</html>
