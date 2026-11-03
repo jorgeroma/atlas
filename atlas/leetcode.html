@@ -1,6 +1,7 @@
 <!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
-<title>Atlas de Patrones LeetCode</title>
-<script src="../theme.js"></script>
+<title>Patrones LeetCode</title>
+<script src="../atlas.js"></script>
+<meta name="description" content="24 patrones de algoritmos para entrevistas, ordenados por frecuencia y esfuerzo, con animaciones paso a paso, código en Python y TypeScript y 9 problemas por patrón.">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -8634,7 +8635,11 @@ function zFunction(s: string): number[] {
     railLinks[t.id].querySelector('em').textContent = topicProgress(t);
     chipLinks[t.id].querySelector('em').textContent = topicProgress(t);
     tabBtns[t.tier].querySelector('.tp').textContent = tierProgress(t.tier);
+    report();
   }
+  const allKeys = topics.flatMap(probKeys);
+  function report() { window.atlasProgress?.(countDone(allKeys), allKeys.length, 'problemas'); }
+  report();
 
   // Player: steps through precomputed frames
   function player(t) {

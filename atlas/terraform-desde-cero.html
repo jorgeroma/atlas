@@ -4,7 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Terraform desde cero</title>
-<script src="../theme.js"></script>
+<script src="../atlas.js"></script>
+<meta name="description" content="De cero a nivel de trabajo: HCL, el ciclo init/plan/apply, estado, módulos, backends remotos, CI/CD y un proyecto final en AWS.">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -2712,6 +2713,7 @@ function paintProgress() {
   });
   $('#prog-fill').style.width = (n / blocks.length * 100) + '%';
   $('#prog-txt').textContent = `${n} / ${blocks.length} bloques completados`;
+  window.atlasProgress?.(n, blocks.length, 'bloques');
 }
 $$('.done-btn').forEach(btn => btn.addEventListener('click', () => {
   const id = btn.dataset.block;

@@ -1,5 +1,18 @@
-// Shared light/dark toggle for index.html and every guide.
-// Load synchronously in <head> so the saved theme applies before first paint.
+// Shared helpers for index.html and every guide. Load synchronously in <head>.
+
+// Progress summary for the landing page. Guides call
+// atlasProgress(done, total, unit) on load and whenever progress changes;
+// index.html reads localStorage["atlas-progress"][<file stem>].
+window.atlasProgress = (done, total, unit) => {
+  const id = location.pathname.split('/').pop().replace(/\.html$/, '');
+  try {
+    const all = JSON.parse(localStorage.getItem('atlas-progress')) || {};
+    all[id] = { done, total, unit, at: Date.now() };
+    localStorage.setItem('atlas-progress', JSON.stringify(all));
+  } catch { /* storage unavailable: the landing page just shows no progress */ }
+};
+
+// Light/dark toggle. Loaded in <head> so the saved theme applies before first paint.
 // Pages style themes with :root[data-theme="light|dark"]; no attribute = follow the OS.
 // The choice lives in a cookie scoped to this file's directory (the site root),
 // so the landing page and all guides share it.
