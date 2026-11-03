@@ -1,6 +1,7 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
-<title>Atlas de Patrones LeetCode</title>
-<script src="../theme.js"></script>
+<!doctype html><html data-atlas-routing><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Patrones LeetCode</title>
+<script src="../atlas.js"></script>
+<meta name="description" content="24 patrones de algoritmos para entrevistas, ordenados por frecuencia y esfuerzo, con animaciones paso a paso, código en Python y TypeScript y 9 problemas por patrón.">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -52,7 +53,9 @@ code, kbd { font-family: var(--f-mono); font-size: .88em; }
 .wrap { max-width: 1240px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
 
 /* Hero */
-.hero { padding-block: 40px 28px; display: grid; gap: 18px; }
+.hero { position: relative; padding-block: 40px 28px; display: grid; gap: 18px; }
+.theme-slot { position: absolute; top: 12px; right: max(16px, env(safe-area-inset-right, 0px)); }
+@media (max-width: 560px) { .hero { padding-top: 60px; } }
 .hero h1 { font-size: clamp(2rem, 5vw, 3.3rem); font-weight: 800; letter-spacing: -.02em; }
 .hero h1 span { color: var(--accent); }
 .hero p { margin: 0; max-width: 66ch; color: var(--ink-2); }
@@ -72,7 +75,7 @@ code, kbd { font-family: var(--f-mono); font-size: .88em; }
 
 /* Tier page */
 .tier { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 36px; padding-block: 28px 80px; }
-.rail { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 84px); align-self: start; display: grid; gap: 2px; font-size: .9rem; }
+.rail { position: sticky; top: calc(env(safe-area-inset-top, 0px) + var(--tb, 84px) + 20px); align-self: start; display: grid; gap: 2px; font-size: .9rem; }
 .rail p { margin: 0 0 8px; font-size: .74rem; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
 .rail a { display: flex; justify-content: space-between; gap: 8px; text-decoration: none; color: var(--ink-2); padding: 6px 10px; border-radius: 6px; }
 .rail a:hover { background: var(--sunk); color: var(--ink); }
@@ -85,13 +88,21 @@ code, kbd { font-family: var(--f-mono); font-size: .88em; }
 @media (max-width: 960px) { .tier { grid-template-columns: minmax(0, 1fr); } .rail { display: none; } }
 
 /* Topic */
-.topic { display: grid; gap: 22px; scroll-margin-top: 90px; min-width: 0; }
+.topic { display: grid; gap: 22px; scroll-margin-top: calc(env(safe-area-inset-top, 0px) + var(--tb, 84px) + 20px); min-width: 0; }
 .topic > header { display: grid; grid-template-columns: auto 1fr auto; gap: 4px 16px; align-items: baseline; border-top: 2px solid var(--ink); padding-top: 16px; }
 .topic .num { font-family: var(--f-mono); font-size: .85rem; color: var(--accent); font-weight: 600; }
 .topic h2 { font-size: clamp(1.5rem, 3.2vw, 2.1rem); font-weight: 700; letter-spacing: -.01em; }
 .topic .sum { grid-column: 2 / -1; margin: 0; color: var(--ink-2); max-width: 70ch; }
 .topic .prog { font-family: var(--f-mono); font-size: .8rem; color: var(--ink-3); white-space: nowrap; }
 .topic h3 { font-size: 1.12rem; font-weight: 700; margin-bottom: 10px; }
+/* One topic per view: prev/next pager closes each topic */
+.tpager { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 12px; padding-top: 24px; border-top: 1px solid var(--line); }
+.tpager a { display: grid; gap: 2px; min-width: 0; padding: 14px 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); text-decoration: none; font-weight: 700; }
+.tpager a:hover { border-color: var(--accent); color: var(--accent); }
+.tpager small { font-weight: 500; font-size: .8rem; color: var(--ink-3); }
+.tpager .next { grid-column: 2; text-align: right; }
+@media (max-width: 560px) { .tpager { grid-template-columns: minmax(0, 1fr); } .tpager .next { grid-column: 1; } }
+.topic h2:focus { outline: none; }
 .two { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 28px; }
 @media (max-width: 760px) { .two { grid-template-columns: minmax(0, 1fr); } }
 .prose { min-width: 0; max-width: 72ch; }
@@ -331,6 +342,7 @@ footer { padding-block: 24px 48px; border-top: 1px solid var(--line); color: var
 </style>
 
 <header class="wrap hero">
+  <span class="theme-slot" data-atlas-theme></span>
   <h1>Atlas de <span>patrones</span> LeetCode</h1>
   <p>Los temas que más salen en entrevistas, ordenados por rentabilidad: primero lo que más aparece y menos cuesta aprender. Cada tema incluye la idea, cómo reconocerlo, una animación paso a paso, código en Python 3 y TypeScript, errores típicos y 9 problemas gratuitos para practicar. Avanza de tier cuando resuelvas los Medium del anterior sin mirar la solución.</p>
   <div class="legend" aria-label="Leyenda de colores de las animaciones">
@@ -8634,7 +8646,11 @@ function zFunction(s: string): number[] {
     railLinks[t.id].querySelector('em').textContent = topicProgress(t);
     chipLinks[t.id].querySelector('em').textContent = topicProgress(t);
     tabBtns[t.tier].querySelector('.tp').textContent = tierProgress(t.tier);
+    report();
   }
+  const allKeys = topics.flatMap(probKeys);
+  function report() { window.atlasProgress?.(countDone(allKeys), allKeys.length, 'problemas'); }
+  report();
 
   // Player: steps through precomputed frames
   function player(t) {
@@ -8749,7 +8765,7 @@ function zFunction(s: string): number[] {
   function section(t) {
     const s = el('section', { class: 'topic', id: t.id, 'aria-labelledby': `h-${t.id}` });
     const cx = `<table class="cx"><thead><tr><th>Operación</th><th>Tiempo</th><th>Espacio</th></tr></thead><tbody>${t.complexity.map((r) => `<tr><td>${esc(r.op)}</td><td>${esc(r.time)}</td><td>${esc(r.space)}</td></tr>`).join('')}</tbody></table>`;
-    s.innerHTML = `<header><span class="num">${String(t.n).padStart(2, '0')}</span><h2 id="h-${t.id}">${esc(t.title)}</h2><span class="prog"></span><p class="sum">${esc(t.summary)}</p></header>
+    s.innerHTML = `<header><span class="num">${String(t.n).padStart(2, '0')}</span><h2 id="h-${t.id}" tabindex="-1">${esc(t.title)}</h2><span class="prog"></span><p class="sum">${esc(t.summary)}</p></header>
       <div class="two"><div class="prose"><h3>La idea</h3>${t.idea}</div>
       <div class="side"><div><h3>Señales rápidas</h3><ul class="when">${t.when.map((w) => `<li>${w}</li>`).join('')}</ul></div><div><h3>Complejidad</h3>${cx}</div></div></div>
       ${recog(t)}
@@ -8763,21 +8779,45 @@ function zFunction(s: string): number[] {
     s.querySelector('.codeslot').append(codeView(t));
     s.querySelector('.probslot').append(problems(t));
     progEls[t.id] = s.querySelector('.prog');
+    const i = topics.indexOf(t), prev = topics[i - 1], next = topics[i + 1];
+    const tierName = (x) => TIERS.find((tr) => tr.n === x.tier).name;
+    const link = (x, cls, lbl) => `<a class="${cls}" href="#${x.id}" data-go><small>${x.tier === t.tier ? lbl : `${lbl} (${tierName(x)})`}</small>${esc(x.title)}</a>`;
+    const pager = el('nav', { class: 'tpager', 'aria-label': 'Navegación entre temas' }, (prev ? link(prev, 'prev', '← Anterior') : '') + (next ? link(next, 'next', 'Siguiente →') : ''));
+    s.append(pager);
     return s;
   }
 
   // Publish the sticky tier bar height so the chip strip and scroll-margin can offset under it
   const setTb = () => document.documentElement.style.setProperty('--tb', bar.offsetHeight + 'px');
   let active = 1;
+  const current = { ...store.current }; // tier -> id of the topic on screen, persisted
+  // One topic per view: hide the tier's other topics and mark this one in rail and chips
+  function openTopic(t) {
+    current[t.tier] = t.id;
+    tierEls[t.tier].querySelectorAll('.topic').forEach((s) => { s.hidden = s.id !== t.id; });
+    document.getElementById(t.id)._player._fit();
+    for (const links of [railLinks, chipLinks]) for (const [id, a] of Object.entries(links)) a.classList.toggle('on', id === t.id);
+    const c = chipLinks[t.id], strip = c.parentElement;
+    if (strip.clientWidth) strip.scrollTo({ left: c.offsetLeft - (strip.clientWidth - c.offsetWidth) / 2 });
+  }
   function show(n, scrollTo) {
     active = n;
     for (const tr of TIERS) { tierEls[tr.n].hidden = tr.n !== n; tabBtns[tr.n].setAttribute('aria-selected', String(tr.n === n)); }
     practicePanel.hidden = n !== 'practica';
     practiceBtn.setAttribute('aria-selected', String(n === 'practica'));
-    if (n !== 'practica') tierEls[n].querySelectorAll('.topic').forEach((s) => s._player._fit());
-    try { history.replaceState(null, '', '#' + (scrollTo || (n === 'practica' ? 'practica' : 'tier' + n))); } catch {}
+    let topic = null;
+    if (n !== 'practica') {
+      topic = topics.find((t) => t.tier === n && t.id === (scrollTo || current[n])) || topics.find((t) => t.tier === n);
+      openTopic(topic);
+    }
+    store.last = topic ? topic.id : 'practica'; store.current = current; save(); // reopen here next visit
+    try { history.replaceState(null, '', '#' + (topic ? topic.id : 'practica')); } catch {}
     setTb();
-    if (scrollTo) document.getElementById(scrollTo)?.scrollIntoView(); else window.scrollTo({ top: 0 });
+    if (scrollTo) {
+      const s = document.getElementById(scrollTo);
+      s?.scrollIntoView();
+      s?.querySelector('h2')?.focus({ preventScroll: true });
+    } else window.scrollTo({ top: 0 });
   }
   for (const tr of TIERS) {
     const list = topics.filter((t) => t.tier === tr.n);
@@ -8790,7 +8830,7 @@ function zFunction(s: string): number[] {
     const content = el('div', { class: 'content' }, `<div class="tier-intro"><h2>${tr.name}: ${tr.sub.toLowerCase()}</h2><p>${tr.intro}</p></div>`);
     for (const t of list) {
       const a = el('a', { href: `#${t.id}` }, `<span>${String(t.n).padStart(2, '0')} · ${esc(t.title)}</span><em></em>`);
-      const go = (e) => { e.preventDefault(); document.getElementById(t.id).scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); };
+      const go = (e) => { e.preventDefault(); show(t.tier, t.id); };
       a.onclick = go;
       rail.append(a); railLinks[t.id] = a;
       const chip = el('a', { href: `#${t.id}` }, `<span>${String(t.n).padStart(2, '0')} · ${esc(t.title)}</span><em></em>`);
@@ -8809,27 +8849,18 @@ function zFunction(s: string): number[] {
   main.append(practicePanel);
   topics.forEach(refreshProgress);
 
-  // Highlight current topic in the rail
-  const io = new IntersectionObserver((entries) => {
-    for (const en of entries) if (en.isIntersecting) {
-      Object.values(railLinks).forEach((a) => a.classList.remove('on')); railLinks[en.target.id]?.classList.add('on');
-      Object.values(chipLinks).forEach((a) => a.classList.remove('on'));
-      const c = chipLinks[en.target.id];
-      if (c) { c.classList.add('on'); const s = c.parentElement; if (s.clientWidth) s.scrollTo({ left: c.offsetLeft - (s.clientWidth - c.offsetWidth) / 2 }); }
-    }
-  }, { rootMargin: '-30% 0px -60% 0px' });
-  document.querySelectorAll('.topic').forEach((s) => io.observe(s));
-
   document.addEventListener('click', (e) => {
     const a = e.target.closest('a[data-go]'); if (!a) return;
     const t = topics.find((x) => x.id === a.getAttribute('href').slice(1)); if (!t) return;
     e.preventDefault(); show(t.tier, t.id);
   });
-  const h = location.hash.slice(1), hit = topics.find((t) => t.id === h);
+  const h = location.hash.slice(1) || store.last || '', hit = topics.find((t) => t.id === h);
   if (hit) show(hit.tier, hit.id); else if (h === 'practica') show('practica');
   else show(/^tier[123]$/.test(h) ? +h[4] : 1);
+  window.atlasRouted?.();
   addEventListener('resize', setTb);
-  addEventListener('resize', () => active !== 'practica' && tierEls[active].querySelectorAll('.topic').forEach((s) => s._player._fit()));
+  addEventListener('resize', () => active !== 'practica' && document.getElementById(current[active])?._player._fit());
+  addEventListener('hashchange', () => { const t = topics.find((x) => x.id === location.hash.slice(1)); if (t) show(t.tier, t.id); });
 })();
 </script>
 <script>

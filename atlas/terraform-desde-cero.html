@@ -1,10 +1,11 @@
 <!doctype html>
-<html lang="es">
+<html lang="es" data-atlas-routing>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Terraform desde cero</title>
-<script src="../theme.js"></script>
+<script src="../atlas.js"></script>
+<meta name="description" content="De cero a nivel de trabajo: HCL, el ciclo init/plan/apply, estado, módulos, backends remotos, CI/CD y un proyecto final en AWS.">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -63,6 +64,7 @@ main{min-width:0;max-width:790px}
 
 /* rail */
 .brand{display:flex;align-items:center;gap:10px;font:700 1rem/1.2 var(--f-display);margin-bottom:16px}
+.theme-slot{margin-left:auto}
 .brand-mark{display:grid;place-items:center;flex:none;width:30px;height:30px;border-radius:7px;background:var(--ink);color:var(--paper);font:700 13px/1 var(--f-mono)}
 .prog-bar{height:6px;background:var(--sunk);border-radius:99px;overflow:hidden}
 .prog-bar span{display:block;height:100%;width:0;background:var(--accent);transition:width .4s ease}
@@ -365,7 +367,7 @@ footer.end{color:var(--muted);font-size:.85rem;padding-top:8px}
 
 <div class="shell">
 <aside class="rail" aria-label="Índice del curso">
-  <div class="brand"><span class="brand-mark">tf</span>Terraform desde cero</div>
+  <div class="brand"><span class="brand-mark">tf</span>Terraform desde cero<span class="theme-slot" data-atlas-theme></span></div>
   <div class="prog-bar" aria-hidden="true"><span id="prog-fill"></span></div>
   <span id="prog-txt">0 / 14 bloques completados</span>
   <details class="toc" id="toc" open>
@@ -2712,6 +2714,7 @@ function paintProgress() {
   });
   $('#prog-fill').style.width = (n / blocks.length * 100) + '%';
   $('#prog-txt').textContent = `${n} / ${blocks.length} bloques completados`;
+  window.atlasProgress?.(n, blocks.length, 'bloques');
 }
 $$('.done-btn').forEach(btn => btn.addEventListener('click', () => {
   const id = btn.dataset.block;
@@ -2742,9 +2745,13 @@ function showView(id, jump) {
   views.forEach(v => { v.hidden = v !== t; });
   $$('.toc a').forEach(a => a.classList.toggle('is-current', a.getAttribute('href') === '#' + t.id));
   if (jump) window.scrollTo({ top: 0, behavior: 'instant' });
+  store.set('tf-last', t.id); // reopen here next visit
 }
 addEventListener('hashchange', () => showView(location.hash.slice(1), true));
+const lastView = store.get('tf-last', '');
+if (!location.hash && views.some(v => v.id === lastView)) try { history.replaceState(null, '', '#' + lastView); } catch { /* keep first view */ }
 showView(location.hash.slice(1), false);
+window.atlasRouted?.();
 
 $$('#proj input[data-p]').forEach(cb => {
   const saved = store.get('tf-proj', {});
