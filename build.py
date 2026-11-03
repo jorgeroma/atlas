@@ -52,16 +52,18 @@ PAGE = """<!doctype html>
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Atlas</title>
+<script src="theme.js"></script>
 <style>
-:root {{ --bg:#f7f7f5; --fg:#1b1b1b; --muted:#666; --card:#fff; --line:#e3e3df; --accent:#3b5bdb; }}
+:root {{ color-scheme:light; --bg:#f7f7f5; --fg:#1b1b1b; --muted:#666; --card:#fff; --line:#e3e3df; --accent:#3b5bdb; }}
 @media (prefers-color-scheme: dark) {{
-  :root {{ --bg:#141414; --fg:#ececec; --muted:#9a9a9a; --card:#1e1e1e; --line:#2e2e2e; --accent:#8ea2ff; }}
+  :root:not([data-theme="light"]) {{ color-scheme:dark; --bg:#141414; --fg:#ececec; --muted:#9a9a9a; --card:#1e1e1e; --line:#2e2e2e; --accent:#8ea2ff; }}
 }}
+:root[data-theme="dark"] {{ color-scheme:dark; --bg:#141414; --fg:#ececec; --muted:#9a9a9a; --card:#1e1e1e; --line:#2e2e2e; --accent:#8ea2ff; }}
 * {{ box-sizing:border-box; }}
 body {{ margin:0; background:var(--bg); color:var(--fg); font:16px/1.5 system-ui, sans-serif; }}
-main {{ max-width:960px; margin:0 auto; padding:48px 16px; }}
+main {{ max-width:960px; margin:0 auto; padding:clamp(24px, 6vw, 48px) max(16px, env(safe-area-inset-right)) 48px max(16px, env(safe-area-inset-left)); }}
 h1 {{ margin:0 0 4px; font-size:2rem; }}
 header p {{ margin:0 0 32px; color:var(--muted); }}
 .grid {{ display:grid; grid-template-columns:repeat(auto-fill, minmax(min(100%, 260px), 1fr)); gap:16px; }}

@@ -30,7 +30,8 @@ build.py                    generates index.html from atlas/*.html
 1. Put the file in `atlas/`, e.g. `atlas/kubernetes.html`. The file name becomes its URL.
 2. Give it a `<title>`, and optionally a `<meta name="description" content="...">` for the card subtitle.
 3. If it stores data in `localStorage`, use a key unique to that guide. All guides share the same origin.
-4. Push to `main`. The landing page updates on its own.
+4. For the shared light/dark toggle, add `<script src="../theme.js"></script>` inside `<head>` and style the dark theme under `:root[data-theme="dark"]` (plus `@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { … } }` for the OS default). The choice is saved in the `atlas-theme` cookie, shared by every page.
+5. Push to `main`. The landing page updates on its own.
 
 ## Run locally
 
