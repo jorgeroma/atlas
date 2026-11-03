@@ -10,7 +10,7 @@ A collection of interactive, self-contained study guides, each one a single HTML
 
 | Guide | What it covers |
 |-------|----------------|
-| [Patrones LeetCode](https://jorgeroma.github.io/atlas/atlas/leetcode.html) | 24 algorithm patterns for coding interviews, ordered by frequency vs. effort. Each pattern has its core idea, recognition signals, complexity, a step-by-step visualization, Python and TypeScript code, common mistakes and 9 practice problems. Includes a mixed quiz, a timed mock interview and a "which pattern?" decision tree. |
+| [Patrones de LeetCode](https://jorgeroma.github.io/atlas/atlas/leetcode.html) | 24 algorithm patterns for coding interviews, ordered by frequency vs. effort. Each pattern has its core idea, recognition signals, complexity, a step-by-step visualization, Python and TypeScript code, common mistakes and 9 practice problems. Includes a mixed quiz, a timed mock interview and a "which pattern?" decision tree. |
 | [Terraform desde cero](https://jorgeroma.github.io/atlas/atlas/terraform-desde-cero.html) | Terraform from zero to working level: infrastructure as code, HCL, the init/plan/apply lifecycle, providers and resources, variables, state, loops and functions, modules, remote backends, testing and security, CI/CD, and a final project deploying a website on AWS. Ends with a command cheat sheet and glossary. |
 
 Progress (solved problems, quiz results, completed sections) is saved in your browser's `localStorage`. Nothing is sent to any server.
