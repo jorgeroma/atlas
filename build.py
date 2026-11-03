@@ -109,6 +109,7 @@ a { color: inherit; }
 
 /* hero */
 .hero { position: relative; isolation: isolate; overflow: hidden; padding-block: clamp(48px, 11vw, 112px) clamp(32px, 6vw, 56px); }
+.theme-slot { position: absolute; z-index: 1; top: 16px; right: max(20px, env(safe-area-inset-right), calc((100% - 920px) / 2 + 20px)); }
 .topo { position: absolute; top: 50%; right: -8%; width: min(720px, 110%); height: auto; transform: translateY(-50%); z-index: -1; }
 .topo path { fill: none; stroke: var(--contour); stroke-width: .9; opacity: .55; }
 .topo path.index { stroke-width: 1.8; opacity: .8; }
@@ -147,6 +148,7 @@ footer a { color: var(--accent); text-underline-offset: 3px; }
 </head>
 <body>
 <header class="hero">
+  <span class="theme-slot" data-atlas-theme></span>
   <!--TOPO-->
   <div class="wrap">
     <h1>Atlas</h1>

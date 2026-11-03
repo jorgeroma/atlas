@@ -12,6 +12,17 @@ window.atlasProgress = (done, total, unit) => {
   } catch { /* storage unavailable: the landing page just shows no progress */ }
 };
 
+// Guides that choose their view in JS mark <html data-atlas-routing> and call
+// atlasRouted() once the view is set. Until then the page stays hidden, so it never
+// paints the default view and then jumps. Window load reveals it as a safety net.
+if (document.documentElement.hasAttribute('data-atlas-routing')) {
+  const hide = document.createElement('style');
+  hide.textContent = 'body{visibility:hidden}';
+  document.head.append(hide);
+  window.atlasRouted = () => hide.remove();
+  addEventListener('load', window.atlasRouted);
+}
+
 // Light/dark toggle. Loaded in <head> so the saved theme applies before first paint.
 // Pages style themes with :root[data-theme="light|dark"]; no attribute = follow the OS.
 // The choice lives in a cookie scoped to this file's directory (the site root),
@@ -26,9 +37,13 @@ window.atlasProgress = (done, total, unit) => {
   const isDark = () => (root.dataset.theme || (osDark.matches ? 'dark' : 'light')) === 'dark';
 
   addEventListener('DOMContentLoaded', () => {
+    // Each page places the button by providing an element with [data-atlas-theme];
+    // without one there is no button, but the saved theme still applies.
+    const slot = document.querySelector('[data-atlas-theme]');
+    if (!slot) return;
     const style = document.createElement('style');
     // Each page names its tokens differently; the fallbacks cover all of them.
-    style.textContent = `.theme-toggle{position:fixed;z-index:20;right:max(16px,env(safe-area-inset-right,0px));bottom:max(16px,env(safe-area-inset-bottom,0px));width:44px;height:44px;display:grid;place-items:center;border-radius:50%;border:1px solid var(--line);background:var(--surface,var(--card));color:var(--ink,var(--fg));font:20px/1 system-ui,sans-serif;cursor:pointer;box-shadow:0 2px 10px rgb(0 0 0/.15)}.theme-toggle:hover{border-color:var(--accent)}.theme-toggle:focus-visible{outline:2px solid var(--accent);outline-offset:2px}`;
+    style.textContent = `.theme-toggle{flex:none;width:40px;height:40px;padding:0;display:grid;place-items:center;border-radius:50%;border:1px solid var(--line);background:var(--surface,var(--card));color:var(--ink,var(--fg));font:18px/1 system-ui,sans-serif;cursor:pointer}.theme-toggle:hover{border-color:var(--accent)}.theme-toggle:focus-visible{outline:2px solid var(--accent);outline-offset:2px}`;
     document.head.append(style);
 
     const btn = document.createElement('button');
@@ -48,6 +63,6 @@ window.atlasProgress = (done, total, unit) => {
     });
     osDark.addEventListener('change', paint);
     paint();
-    document.body.append(btn);
+    slot.append(btn);
   });
 })();

@@ -31,9 +31,10 @@ atlas.js                    shared by every page: light/dark toggle and progress
 1. Put the file in `atlas/`, e.g. `atlas/kubernetes.html`. The file name becomes its URL.
 2. Give it a `<title>`, and optionally a `<meta name="description" content="...">` for the card subtitle.
 3. If it stores data in `localStorage`, use a key unique to that guide. All guides share the same origin.
-4. For the shared light/dark toggle, add `<script src="../atlas.js"></script>` inside `<head>` and style the dark theme under `:root[data-theme="dark"]` (plus `@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { … } }` for the OS default). The choice is saved in the `atlas-theme` cookie, shared by every page.
+4. For the shared light/dark toggle, add `<script src="../atlas.js"></script>` inside `<head>` and style the dark theme under `:root[data-theme="dark"]` (plus `@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { … } }` for the OS default). Place the toggle button with an element marked `data-atlas-theme` (e.g. `<span data-atlas-theme></span>` in the header); without it the saved theme still applies but no button is shown. The choice is saved in the `atlas-theme` cookie, shared by every page.
 5. To show progress on the landing page, call `window.atlasProgress?.(done, total, 'unit')` on load and whenever progress changes (e.g. `'bloques'`, `'problemas'`).
-6. Push to `main`. The landing page updates on its own.
+6. If the guide picks its view in JavaScript (tabs, one section per view, restoring the last position), add `data-atlas-routing` to `<html>` and call `window.atlasRouted?.()` once the view is set, so the page is not painted before it jumps there.
+7. Push to `main`. The landing page updates on its own.
 
 ## Run locally
 
