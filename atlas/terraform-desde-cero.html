@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Terraform desde cero</title>
 <script src="../atlas.js"></script>
-<meta name="description" content="De cero a nivel de trabajo: HCL, el ciclo init/plan/apply, estado, módulos, backends remotos, CI/CD y un proyecto final en AWS.">
+<meta name="description" content="De cero a nivel de trabajo y a la certificación Terraform Associate (004): HCL, init/plan/apply, state, módulos, backends, secretos, CI/CD, HCP Terraform, proyecto final y simulacro de examen. Todos los ejercicios se pueden hacer gratis.">
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -359,6 +359,19 @@ footer.end{color:var(--muted);font-size:.85rem;padding-top:8px}
   .fact b{font-size:1.4rem}
 }
 
+/* mock exam */
+.exam-bar{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-bottom:12px}
+.exam-clock{font:700 1.05rem/1 var(--f-mono);color:var(--ink)}
+.exam-clock.low{color:var(--del)}
+.exam-best{font:500 .8rem var(--f-mono);color:var(--muted)}
+.exam-qs{list-style:none;padding:0;margin:0}
+.exam-qs .q{max-width:none}
+.exam-qs .q-t em{font-weight:400;color:var(--muted)}
+.exam-qs label.q-opt{display:flex;gap:10px;align-items:flex-start}
+.exam-qs label.q-opt input{margin-top:4px;flex:none;accent-color:var(--accent)}
+.exam-qs .q-dom{font:500 .7rem var(--f-mono);color:var(--muted);margin:8px 0 0}
+.exam-foot{position:sticky;bottom:0;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 0;background:var(--surface);font:500 .8rem var(--f-mono);color:var(--muted)}
+
 @media (prefers-reduced-motion: reduce){
   html{scroll-behavior:auto}
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
@@ -369,7 +382,7 @@ footer.end{color:var(--muted);font-size:.85rem;padding-top:8px}
 <aside class="rail" aria-label="Índice del curso">
   <div class="brand"><span class="brand-mark">tf</span>Terraform desde cero<span class="theme-slot" data-atlas-theme></span></div>
   <div class="prog-bar" aria-hidden="true"><span id="prog-fill"></span></div>
-  <span id="prog-txt">0 / 14 bloques completados</span>
+  <span id="prog-txt">0 / 16 bloques completados</span>
   <details class="toc" id="toc" open>
     <summary>Índice</summary>
     <ol>
@@ -385,9 +398,11 @@ footer.end{color:var(--muted);font-size:.85rem;padding-top:8px}
       <li><a href="#b-life"><span class="n">09</span>Meta-argumentos y lifecycle</a></li>
       <li><a href="#b-mod"><span class="n">10</span>Módulos</a></li>
       <li><a href="#b-remote"><span class="n">11</span>Backends, locking y entornos</a></li>
-      <li><a href="#b-test"><span class="n">12</span>Calidad, tests y seguridad</a></li>
+      <li><a href="#b-test"><span class="n">12</span>Calidad, tests y secretos</a></li>
       <li><a href="#b-ci"><span class="n">13</span>CI/CD y trabajo en equipo</a></li>
-      <li><a href="#b-proj"><span class="n">14</span>Proyecto final</a></li>
+      <li><a href="#b-hcp"><span class="n">14</span>HCP Terraform</a></li>
+      <li><a href="#b-proj"><span class="n">15</span>Proyecto final</a></li>
+      <li><a href="#b-exam"><span class="n">16</span>Examen Associate (004)</a></li>
       <li class="sep" aria-hidden="true"></li>
       <li><a href="#b-ref"><span class="n">+</span>Recursos, chuleta y glosario</a></li>
     </ol>
@@ -396,14 +411,14 @@ footer.end{color:var(--muted);font-size:.85rem;padding-top:8px}
 
 <main>
 <header class="hero" id="ruta">
-  <p class="kicker">Curso completo · 14 bloques · en orden</p>
+  <p class="kicker">Curso completo · 16 bloques · prepara la Terraform Associate (004)</p>
   <h1>Terraform <span>desde cero</span> hasta trabajar con él en equipo</h1>
-  <p class="sub">Una sola página con la teoría, simuladores interactivos, ejemplos copiables, autoevaluaciones, ejercicios con solución y un proyecto final. Sigue los bloques en orden: cada uno usa lo que aprendiste en el anterior.</p>
+  <p class="sub">Una sola página con la teoría, simuladores interactivos, ejemplos copiables, autoevaluaciones, ejercicios con solución, un proyecto final y un simulacro del examen Terraform Associate (004). Cubre todos sus objetivos y todos los ejercicios tienen una versión gratuita. Sigue los bloques en orden: cada uno usa lo que aprendiste en el anterior.</p>
   <div class="hero-grid">
     <div>
       <div class="facts">
-        <div class="fact"><b>14</b><span>bloques</span></div>
-        <div class="fact"><b>~45 h</b><span>de estudio</span></div>
+        <div class="fact"><b>16</b><span>bloques</span></div>
+        <div class="fact"><b>~58 h</b><span>de estudio</span></div>
         <div class="fact"><b>7</b><span>simuladores</span></div>
       </div>
       <div class="tbl-wrap">
@@ -413,7 +428,8 @@ footer.end{color:var(--muted);font-size:.85rem;padding-top:8px}
             <tr><td>1</td><td>01–04</td><td>Entender el modelo y crear/destruir tu primera infraestructura</td></tr>
             <tr><td>2</td><td>05–08</td><td>Escribir configuraciones reales: dependencias, variables, state y bucles</td></tr>
             <tr><td>3</td><td>09–11</td><td>Reutilizar con módulos y trabajar con state remoto y varios entornos</td></tr>
-            <tr><td>4</td><td>12–14</td><td>Tests, seguridad, CI/CD y proyecto final de principio a fin</td></tr>
+            <tr><td>4</td><td>12–14</td><td>Tests, secretos, CI/CD y HCP Terraform</td></tr>
+            <tr><td>5</td><td>15–16</td><td>Proyecto final y simulacro del examen Terraform Associate (004)</td></tr>
           </tbody>
         </table>
       </div>
@@ -530,6 +546,16 @@ resource "aws_instance" "web" {
       </tbody>
     </table>
   </div>
+  <h3>Multi-nube, nube híbrida y cualquier servicio con API</h3>
+  <p>Como Core no sabe nada de ninguna plataforma, el <strong>mismo flujo</strong> (escribir, <code>plan</code>, <code>apply</code>) y el <strong>mismo lenguaje</strong> sirven para todo lo que tenga un provider. Eso es lo que el examen llama gestionar flujos <em>multi-cloud</em>, <em>hybrid cloud</em> y <em>service-agnostic</em>:</p>
+  <ul>
+    <li><strong>Multi-nube:</strong> una sola configuración puede declarar recursos en AWS y en Azure a la vez y conectarlos con referencias, por ejemplo un registro DNS de Cloudflare que apunta a una IP de AWS. Un equipo aprende una herramienta en lugar de CloudFormation, ARM/Bicep y Deployment Manager por separado.</li>
+    <li><strong>Nube híbrida:</strong> hay providers para lo que vive en tu centro de datos (vSphere, Proxmox, Nutanix, equipos de red, Kubernetes on-premise), así que lo local y lo público se gestionan con el mismo código y el mismo state.</li>
+    <li><strong>Agnóstico de servicio:</strong> no solo infraestructura. Hay providers para GitHub, Datadog, PagerDuty, Okta, Vault o Cloudflare. Un repositorio puede crear la red, el clúster, el repositorio de código, los permisos y las alertas.</li>
+  </ul>
+  <p>Ojo con la idea equivocada de que Terraform hace tu código <em>portable</em> entre nubes: un <code>aws_instance</code> no se convierte en una máquina de Azure. Lo que se comparte es el flujo, el lenguaje, el state y los módulos; los recursos de cada nube siguen siendo distintos.</p>
+  <p><strong>Ventajas de la IaC que el examen da por sabidas:</strong> versionado y revisión en git, reproducibilidad (mismos entornos cada vez), automatización (menos errores manuales y más velocidad), documentación viva (el código describe lo que existe), reutilización con módulos y planes previos que muestran el impacto antes de aplicar.</p>
+
   <div class="note warn"><span class="lbl">Licencia y OpenTofu</span>
     <p>Desde agosto de 2023 (versión 1.6), Terraform se publica con la licencia Business Source License 1.1. Para usarlo en tu empresa para gestionar vuestra propia infraestructura no cambia nada; la restricción afecta a quien vende productos que compiten con HashiCorp. Como respuesta nació <a href="https://opentofu.org" target="_blank" rel="noopener">OpenTofu</a>, un fork mantenido bajo la Linux Foundation. HashiCorp forma parte de IBM desde 2025. Lo que aprendas aquí sirve para ambos: en OpenTofu el comando es <code>tofu</code> en lugar de <code>terraform</code>.</p>
   </div>
@@ -641,6 +667,17 @@ resource "local_file" "hola" {
   content  = "Hola desde Terraform"
 }
 </script>
+  </div>
+
+  <div class="note"><span class="lbl">Ruta gratuita para todo el curso</span>
+    <p>Puedes hacer todos los ejercicios y aprobar el examen sin pagar nada. Cada bloque marca la alternativa gratuita cuando el ejemplo usa AWS.</p>
+    <ul>
+      <li><strong>Providers locales:</strong> <code>docker</code>, <code>local</code>, <code>random</code>, <code>null</code>, <code>tls</code>, <code>http</code> y el recurso integrado <code>terraform_data</code>. Con ellos practicas recursos, dependencias, variables, bucles, state, módulos, <code>import</code> y tests.</li>
+      <li><strong>Backend remoto con locking:</strong> PostgreSQL en Docker con el backend <code>pg</code> (bloque 11) o HCP Terraform.</li>
+      <li><strong>Secretos:</strong> Vault en modo desarrollo dentro de Docker (bloque 12).</li>
+      <li><strong>HCP Terraform:</strong> el plan Free cuesta 0 € hasta 500 recursos gestionados. <code>terraform_data</code>, <code>null_resource</code> y los data sources no cuentan para ese límite (bloque 14).</li>
+      <li><strong>AWS (opcional):</strong> solo para el proyecto final. Si no quieres cuenta, usa LocalStack o el proyecto alternativo con <code>kind</code> que se propone allí.</li>
+    </ul>
   </div>
 
   <h3>Credenciales de nube (cuando pases a AWS)</h3>
@@ -1262,7 +1299,7 @@ output "url" {
 
 <!-- ============ 07 ============ -->
 <section class="block" id="b-state" data-track>
-  <p class="eyebrow">Bloque 07 · El concepto más importante · ~4 h</p>
+  <p class="eyebrow">Bloque 07 · El concepto más importante · ~5 h</p>
   <h2>El state: cómo sabe Terraform qué existe</h2>
   <p class="lead">Casi todos los sustos con Terraform vienen de no entender el state. Dedica a este bloque el tiempo que necesites y juega con el simulador hasta que puedas predecir cada plan.</p>
   <div class="goals"><strong>Al terminar sabrás</strong>
@@ -1343,14 +1380,34 @@ output "url" {
   ]
 }
 </script>
-  <p><code>serial</code> aumenta con cada escritura y <code>lineage</code> identifica la “historia” del state; Terraform los usa para no mezclar states distintos. Los atributos incluyen todo lo que devuelve la API, contraseñas incluidas.</p>
+  <p><code>serial</code> aumenta con cada escritura y <code>lineage</code> identifica la “historia” del state; Terraform los usa para no mezclar states distintos. Los atributos incluyen todo lo que devuelve la API, contraseñas incluidas: cualquier usuario o contraseña que pases a un recurso, aunque venga de una variable <code>sensitive</code>, acaba <strong>en claro</strong> en el state. Es una de las preguntas de ejemplo oficiales del examen. La única excepción son los valores <em>ephemeral</em> y los argumentos <em>write-only</em> (bloque 12).</p>
+
+  <h3>Dónde vive el state por defecto: el backend local</h3>
+  <p>Si tu configuración no tiene bloque <code>backend</code> ni <code>cloud</code>, Terraform usa el <strong>backend local</strong>:</p>
+  <ul>
+    <li>Guarda el state en <code>terraform.tfstate</code>, en el directorio donde ejecutas, y deja la versión anterior en <code>terraform.tfstate.backup</code>.</li>
+    <li>Los workspaces de CLI distintos de <code>default</code> se guardan en <code>terraform.tfstate.d/&lt;workspace&gt;/terraform.tfstate</code>.</li>
+    <li><strong>Sí tiene locking</strong>: bloquea el fichero con las APIs del sistema operativo. Eso protege de dos comandos a la vez en la misma máquina, pero no sirve para un equipo, porque cada persona tiene su propia copia.</li>
+    <li>Es un backend <em>enhanced</em>: además de guardar el state, ejecuta las operaciones en tu máquina.</li>
+  </ul>
+<script type="text/x-code" data-lang="hcl" data-file="backend.tf">
+# Equivale a no poner nada, salvo que cambia la ruta del fichero
+terraform {
+  backend "local" {
+    path = "state/dev.tfstate"
+  }
+}
+</script>
+  <p>Cambiar de backend (por ejemplo, de local a S3 o a HCP Terraform) requiere volver a ejecutar <code>terraform init</code>, que ofrece copiar el state existente al nuevo destino.</p>
 
   <h3>Drift: cambios fuera de Terraform</h3>
   <p>Cuando alguien cambia algo en la consola, el siguiente plan muestra <em>Objects have changed outside of Terraform</em> y propone volver a lo que dice el código. Tienes dos opciones: dejar que Terraform lo revierta, o aceptar el cambio actualizando el código. Si solo quieres ver el drift sin proponer cambios:</p>
 <script type="text/x-code" data-lang="sh" data-file="terminal">
 terraform plan -refresh-only        # ¿qué ha cambiado fuera de Terraform?
 terraform apply -refresh-only       # acepta esos cambios en el state (no en la nube)
+terraform plan -refresh=false       # al revés: no consultes la realidad (más rápido, más arriesgado)
 </script>
+  <p><code>plan</code> y <code>apply</code> hacen el refresh <strong>automáticamente</strong>; <code>validate</code>, <code>output</code> o <code>state list</code> no. El antiguo <code>terraform refresh</code> está obsoleto y equivale a <code>terraform apply -refresh-only -auto-approve</code>, es decir, acepta el drift sin enseñártelo antes.</p>
 
   <h3>Comandos de state</h3>
 <script type="text/x-code" data-lang="sh" data-file="terminal">
@@ -1360,7 +1417,22 @@ terraform apply -replace=aws_instance.web      # forzar reemplazo (sustituye al 
 terraform state mv aws_instance.web aws_instance.app   # renombrar (mejor: bloque moved)
 terraform state rm aws_s3_bucket.old           # olvidar sin borrar (mejor: bloque removed)
 terraform force-unlock LOCK_ID                 # solo si un lock quedó colgado
+terraform state pull > copia.tfstate           # descargar el state actual (también remoto)
+terraform show                                 # state actual en formato legible
+terraform show -json | jq '.values'            # lo mismo en JSON
+terraform show tfplan                          # contenido de un plan guardado
 </script>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Comando antiguo</th><th>Estado</th><th>Sustituto</th></tr></thead>
+      <tbody>
+        <tr><td><code>terraform taint ADDR</code></td><td>Obsoleto</td><td><code>terraform apply -replace=ADDR</code>: el reemplazo se ve en el plan antes de aplicar</td></tr>
+        <tr><td><code>terraform untaint ADDR</code></td><td>Sigue existiendo</td><td>Quita la marca <em>tainted</em> que deja una creación fallida</td></tr>
+        <tr><td><code>terraform refresh</code></td><td>Obsoleto</td><td><code>plan -refresh-only</code> / <code>apply -refresh-only</code></td></tr>
+        <tr><td><code>terraform import ADDR ID</code></td><td>Vigente</td><td>El bloque <code>import</code> es preferible, pero el comando sigue y entra en el examen</td></tr>
+      </tbody>
+    </table>
+  </div>
 
   <h3>Refactorizar sin destruir: moved, import y removed</h3>
   <p>Si renombras <code>aws_instance.web</code> a <code>aws_instance.app</code> en el código sin más, Terraform ve un recurso que ya no existe (destroy) y uno nuevo (create). Estos bloques declaran la intención en el código, se revisan en el pull request y funcionan igual para todo el equipo:</p>
@@ -1387,6 +1459,45 @@ removed {
 }
 </script>
   <p>Con <code>import</code> no necesitas escribir la configuración a mano: <code>terraform plan -generate-config-out=generated.tf</code> la genera a partir del objeto real. Revísala y límpiala antes de commitear.</p>
+
+  <h4>Importar: comando o bloque</h4>
+<script type="text/x-code" data-lang="sh" data-file="terminal">
+# Forma clásica: primero escribes el bloque resource vacío o completo, luego:
+terraform import aws_s3_bucket.legacy acme-legacy-bucket
+terraform import 'aws_instance.web["a"]' i-0b7d4e19a2   # con for_each, entre comillas
+terraform import module.network.aws_vpc.main vpc-0a1b2c   # dentro de un módulo
+</script>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th></th><th><code>terraform import</code> (CLI)</th><th>Bloque <code>import</code> (1.5+)</th></tr></thead>
+      <tbody>
+        <tr><td>¿Se ve en un plan?</td><td>No: escribe directamente en el state</td><td>Sí: aparece en <code>plan</code> y se aplica con <code>apply</code></td></tr>
+        <tr><td>Configuración</td><td>Tienes que escribir el <code>resource</code> antes; si no existe, falla</td><td>Puede generarla con <code>-generate-config-out</code></td></tr>
+        <tr><td>Varios recursos</td><td>Uno por comando</td><td>Muchos a la vez, incluso con <code>for_each</code> (1.7+)</td></tr>
+        <tr><td>Revisión en equipo</td><td>Nadie lo ve en el pull request</td><td>Va en el código y se revisa</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>En ambos casos, después del import ejecuta <code>terraform plan</code>: si muestra cambios, tu configuración no coincide con el objeto real y debes ajustarla hasta que diga <em>No changes</em>. Import nunca crea ni modifica el objeto real.</p>
+
+  <h3>Cuando algo falla: logs detallados</h3>
+  <p>Si un error no se entiende, activa los logs con variables de entorno. Se escriben en la salida de error (stderr).</p>
+<script type="text/x-code" data-lang="sh" data-file="terminal">
+export TF_LOG=DEBUG                 # TRACE, DEBUG, INFO, WARN o ERROR (de más a menos detalle)
+export TF_LOG_PATH=./terraform.log  # guarda los logs en un fichero (sin TF_LOG no registra nada)
+terraform apply
+
+TF_LOG_CORE=TRACE terraform plan     # solo los logs de Terraform Core
+TF_LOG_PROVIDER=DEBUG terraform plan # solo los de los providers
+TF_LOG=JSON terraform plan           # nivel TRACE en formato JSON
+unset TF_LOG TF_LOG_PATH             # desactivar
+</script>
+  <ul>
+    <li><code>TRACE</code> es el nivel más detallado e incluye las peticiones HTTP a las APIs.</li>
+    <li><code>TF_LOG_PATH</code> solo indica dónde escribir. <strong>Sin <code>TF_LOG</code> no se registra nada.</strong> Esta es una trampa típica del examen.</li>
+    <li>Si Terraform se cuelga por un fallo interno, escribe <code>crash.log</code> en el directorio actual. Por eso aparece en el <code>.gitignore</code>.</li>
+    <li>Los logs pueden contener secretos y tokens: no los pegues tal cual en un issue público.</li>
+  </ul>
   <div class="note warn"><span class="lbl">Reglas de oro del state</span>
     <p>1. Nunca lo subas a git: contiene secretos y provoca conflictos. 2. Nunca lo edites a mano salvo emergencia y con copia. 3. En equipo, guárdalo en un backend remoto con locking y versionado (bloque 11). 4. Un state más pequeño significa planes más rápidos y menos daño si algo sale mal.</p>
   </div>
@@ -1415,6 +1526,40 @@ moved {
 }
 </script>
           <p>El plan muestra <code># docker_container.nginx has moved to docker_container.web</code> y <code>Plan: 0 to add, 0 to change, 0 to destroy</code>. Tras aplicarlo en todos los entornos, puedes borrar el bloque <code>moved</code>.</p>
+        </details>
+      </li>
+      <li>Importa un contenedor creado a mano, primero con el comando y después con el bloque <code>import</code> generando la configuración. Todo en local y gratis.
+        <details class="sol"><summary>Ver solución</summary>
+<script type="text/x-code" data-lang="sh" data-file="terminal">
+docker run -d --name legacy -p 8081:80 nginx:latest
+ID=$(docker inspect -f '{{.Id}}' legacy)
+
+# A) Comando: el bloque resource debe existir antes
+cat >> main.tf <<'EOF'
+resource "docker_container" "legacy" {
+  name  = "legacy"
+  image = "nginx:latest"
+}
+EOF
+terraform import docker_container.legacy "$ID"
+terraform plan        # verás diferencias: ajusta el código hasta "No changes"
+
+# B) Bloque: deshaz lo anterior sin borrar el contenedor y repite
+terraform state rm docker_container.legacy   # olvida el recurso, el contenedor sigue
+# borra el bloque resource "legacy" de main.tf y añade:
+#   import {
+#     to = docker_container.legacy
+#     id = "<pega aquí el ID>"
+#   }
+terraform plan -generate-config-out=generated.tf
+terraform apply
+</script>
+          <p>Con el comando, el import ocurre al instante y no aparece en ningún plan. Con el bloque, el plan muestra <code>1 to import</code>, lo revisas y lo aplicas. <code>generated.tf</code> sale con todos los atributos; límpialo dejando solo los que importan.</p>
+        </details>
+      </li>
+      <li>Ejecuta <code>TF_LOG=TRACE TF_LOG_PATH=trace.log terraform plan</code>, busca en <code>trace.log</code> las peticiones al socket de Docker y después repite solo con <code>TF_LOG_PATH</code>. ¿Se crea el fichero?
+        <details class="sol"><summary>Ver solución</summary>
+          <p>Con las dos variables se crea <code>trace.log</code> con miles de líneas. Solo con <code>TF_LOG_PATH</code> no se registra nada: hace falta <code>TF_LOG</code> para activar los logs.</p>
         </details>
       </li>
     </ol>
@@ -1551,7 +1696,12 @@ resource "aws_security_group" "web" {
         <tr><td><code>keys</code> / <code>values</code></td><td><code>keys({a=1, b=2})</code></td><td><code>["a","b"]</code></td></tr>
         <tr><td><code>toset</code> / <code>tolist</code></td><td><code>toset(["a","a","b"])</code></td><td><code>["a","b"]</code> (set)</td></tr>
         <tr><td><code>coalesce</code></td><td><code>coalesce(var.name, "default")</code></td><td>Primer valor no nulo ni vacío</td></tr>
-        <tr><td><code>try</code> / <code>can</code></td><td><code>try(var.cfg.port, 80)</code></td><td>Valor alternativo si la expresión falla</td></tr>
+        <tr><td><code>try</code></td><td><code>try(var.cfg.port, 80)</code></td><td>Primer argumento que se evalúa sin error</td></tr>
+        <tr><td><code>can</code></td><td><code>can(regex("^ami-", var.ami))</code></td><td><code>true</code> o <code>false</code>: ideal dentro de <code>validation</code></td></tr>
+        <tr><td><code>contains</code></td><td><code>contains(["dev","prod"], var.env)</code></td><td><code>true</code></td></tr>
+        <tr><td><code>element</code></td><td><code>element(["a","b"], 3)</code></td><td><code>"b"</code> (da la vuelta)</td></tr>
+        <tr><td><code>zipmap</code></td><td><code>zipmap(["a","b"], [1,2])</code></td><td><code>{a=1, b=2}</code></td></tr>
+        <tr><td><code>min</code> / <code>max</code></td><td><code>max(1, 5, 3)</code> · <code>max(var.list...)</code></td><td><code>5</code>; <code>...</code> expande una lista en argumentos</td></tr>
         <tr><td><code>jsonencode</code> / <code>yamlencode</code></td><td><code>jsonencode({Version = "2012-10-17"})</code></td><td>String JSON (políticas IAM)</td></tr>
         <tr><td><code>file</code> / <code>templatefile</code></td><td><code>templatefile("init.sh.tftpl", {port = 80})</code></td><td>Fichero con variables sustituidas</td></tr>
         <tr><td><code>cidrsubnet</code></td><td><code>cidrsubnet("10.0.0.0/16", 8, 1)</code></td><td><code>"10.0.1.0/24"</code></td></tr>
@@ -2065,6 +2215,9 @@ terraform workspace list
       </tbody>
     </table>
   </div>
+  <div class="note warn"><span class="lbl">Dos cosas distintas con el mismo nombre</span>
+    <p>Un <em>workspace</em> de la CLI es un state más para la <strong>misma</strong> configuración y el mismo backend. Un <em>workspace</em> de HCP Terraform es mucho más: una unidad con su propio state, variables, permisos, historial de ejecuciones y, a menudo, su propio repositorio. Puede representar configuraciones completamente independientes. El examen pregunta por esta diferencia; la verás en el bloque 14.</p>
+  </div>
 <pre class="tree">infra/
 ├── modules/
 │   ├── network/
@@ -2106,6 +2259,42 @@ data "aws_vpc" "main" {
       <li>Crea el bootstrap del bucket de state, configura el backend S3 en tu proyecto y migra con <code>terraform init -migrate-state</code>. Comprueba en la consola de S3 que el fichero existe y tiene versiones.</li>
       <li>Abre dos terminales y lanza <code>terraform apply</code> en ambas. Lee el error de la segunda.</li>
       <li>Reorganiza tu proyecto en <code>modules/</code> y <code>envs/dev</code> + <code>envs/prod</code> con keys de state distintas.</li>
+      <li>Sin AWS y gratis: usa PostgreSQL en Docker como backend remoto con locking, migra a él un state local, provoca un conflicto de lock y crea un workspace.
+        <details class="sol"><summary>Ver solución</summary>
+<script type="text/x-code" data-lang="sh" data-file="terminal">
+docker run -d --name tfstate-db -e POSTGRES_PASSWORD=tf -p 5432:5432 postgres:16
+export PG_CONN_STR="postgres://postgres:tf@localhost:5432/postgres?sslmode=disable"
+</script>
+<script type="text/x-code" data-lang="hcl" data-file="~/tf-lab/pg/main.tf">
+terraform {
+  backend "pg" {} # lee la conexión de PG_CONN_STR
+}
+
+# Un apply lento para tener tiempo de lanzar el segundo
+resource "terraform_data" "slow" {
+  triggers_replace = timestamp()
+
+  provisioner "local-exec" {
+    command = "sleep 30"
+  }
+}
+</script>
+<script type="text/x-code" data-lang="sh" data-file="terminal">
+# 1. Empieza sin el bloque backend: apply con state local.
+# 2. Añade el bloque backend "pg" y migra:
+terraform init -migrate-state        # responde "yes": copia el state a Postgres
+ls terraform.tfstate                 # ya puedes borrarlo; el state vive en la base de datos
+
+# 3. Terminal A y terminal B a la vez:
+terraform apply -auto-approve        # B falla con "Error acquiring the state lock"
+
+# 4. Workspaces con este backend
+terraform workspace new staging && terraform workspace list
+docker exec tfstate-db psql -U postgres -c 'select name from terraform_remote_state.states;'
+</script>
+          <p>Postgres usa <em>advisory locks</em>: si el proceso muere, el lock se libera solo al cerrarse la conexión, y por eso este backend no admite <code>force-unlock</code>. La tabla muestra una fila por workspace (<code>default</code> y <code>staging</code>). Al terminar, <code>docker rm -f tfstate-db</code>.</p>
+        </details>
+      </li>
     </ol>
   </div>
   <button type="button" class="done-btn" data-block="b-remote" aria-pressed="false">Marcar bloque como completado</button>
@@ -2113,14 +2302,15 @@ data "aws_vpc" "main" {
 
 <!-- ============ 12 ============ -->
 <section class="block" id="b-test" data-track>
-  <p class="eyebrow">Bloque 12 · Calidad · ~4 h</p>
-  <h2>Calidad, tests y seguridad</h2>
+  <p class="eyebrow">Bloque 12 · Calidad y secretos · ~5 h</p>
+  <h2>Calidad, tests, seguridad y secretos</h2>
   <p class="lead">El código de infraestructura merece las mismas garantías que el de aplicación: formato, análisis estático, tests y escaneo de seguridad, en local y en CI.</p>
   <div class="goals"><strong>Al terminar sabrás</strong>
     <ul>
       <li>Montar la cadena fmt → validate → tflint → escáner de seguridad.</li>
       <li>Escribir tests nativos con <code>terraform test</code> y providers simulados.</li>
       <li>Gestionar secretos sin que acaben en el código.</li>
+      <li>Usar valores <code>ephemeral</code>, argumentos write-only y Vault para que los secretos no lleguen al state.</li>
     </ul>
   </div>
 
@@ -2201,6 +2391,65 @@ run "rejects_unknown_env" {
     </table>
   </div>
 
+  <h4>sensitive: ocultar no es proteger</h4>
+  <ul>
+    <li><code>sensitive = true</code> en una variable o un output hace que <code>plan</code>, <code>apply</code> y <code>terraform output</code> muestren <code>(sensitive value)</code>. El valor <strong>sigue en claro</strong> en el state y en los planes guardados. <code>terraform output -raw nombre</code> o <code>-json</code> lo muestran.</li>
+    <li>La marca se propaga: si un output usa un valor sensible y no lo marcas como <code>sensitive</code>, Terraform da error.</li>
+    <li>Los providers marcan como sensibles muchos atributos, por ejemplo la contraseña de una base de datos. Las funciones <code>sensitive()</code> y <code>nonsensitive()</code> ponen y quitan la marca a mano.</li>
+  </ul>
+
+  <h3>Que el secreto no llegue al state: ephemeral y write-only</h3>
+  <p>Desde la 1.10, Terraform tiene valores <strong>ephemeral</strong>: existen mientras se ejecuta el plan o el apply y <strong>nunca se escriben</strong> ni en el plan ni en el state. Desde la 1.11, los argumentos <strong>write-only</strong> permiten pasar esos valores a un recurso sin que queden guardados. Es tema nuevo de la versión 004 del examen.</p>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Pieza</th><th>Desde</th><th>Qué hace</th></tr></thead>
+      <tbody>
+        <tr><td><code>variable "x" { ephemeral = true }</code></td><td>1.10</td><td>Entrada que no se guarda. Típica: un token para configurar un provider.</td></tr>
+        <tr><td><code>ephemeral "tipo" "nombre" {}</code></td><td>1.10</td><td>Recurso efímero: se lee o genera en cada ejecución y no se guarda. Se referencia como <code>ephemeral.tipo.nombre.atributo</code>.</td></tr>
+        <tr><td><code>output "x" { ephemeral = true }</code></td><td>1.10</td><td>Solo en <strong>módulos hijos</strong>: pasa un valor efímero al módulo padre. En el módulo raíz no se permite.</td></tr>
+        <tr><td>Argumento write-only (<code>password_wo</code>)</td><td>1.11</td><td>Acepta valores efímeros. El provider lo usa y Terraform guarda <code>null</code>. Va con <code>password_wo_version</code>: incrementa el número para volver a enviar el valor.</td></tr>
+        <tr><td><code>ephemeralasnull()</code>, <code>terraform.applying</code></td><td>1.10</td><td>Convertir valores efímeros en <code>null</code> y saber si la operación es un apply.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Un valor efímero solo se puede usar donde no hay riesgo de que se guarde: configuración de un <code>provider</code>, argumentos write-only, <code>locals</code>, otros bloques <code>ephemeral</code>, outputs efímeros de módulos hijos y provisioners. Si lo pones en un argumento normal, Terraform da error.</p>
+<script type="text/x-code" data-lang="hcl" data-file="db.tf (AWS, solo para leer)">
+# Genera la contraseña en cada ejecución sin guardarla (hashicorp/random >= 3.7)
+ephemeral "random_password" "db" {
+  length = 24
+}
+
+resource "aws_db_instance" "main" {
+  engine              = "postgres"
+  instance_class      = "db.t3.micro"
+  allocated_storage   = 20
+  username            = "app"
+  skip_final_snapshot = true
+
+  password_wo         = ephemeral.random_password.db.result   # nunca llega al state
+  password_wo_version = 1                                      # súbelo a 2 para rotarla
+}
+</script>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th></th><th><code>sensitive</code></th><th><code>ephemeral</code> / write-only</th></tr></thead>
+      <tbody>
+        <tr><td>¿Se ve en la salida?</td><td>No</td><td>No</td></tr>
+        <tr><td>¿Se guarda en el state y en el plan?</td><td><strong>Sí, en claro</strong></td><td>No</td></tr>
+        <tr><td>¿Dónde se puede usar?</td><td>En cualquier sitio</td><td>Solo en contextos efímeros</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Vault: gestionar secretos con HashiCorp Vault</h3>
+  <p><a href="https://developer.hashicorp.com/vault" target="_blank" rel="noopener">Vault</a> es el gestor de secretos de HashiCorp. El examen espera que sepas cómo encaja con Terraform:</p>
+  <ul>
+    <li><strong>Leer secretos</strong> con el provider <code>hashicorp/vault</code>. El data source <code>data "vault_kv_secret_v2"</code> los lee, pero el valor <strong>se guarda en el state</strong>. El recurso efímero <code>ephemeral "vault_kv_secret_v2"</code> (provider 5.0 o posterior) no lo guarda.</li>
+    <li><strong>Escribir secretos</strong> sin dejarlos en el state con el argumento write-only <code>data_json_wo</code> de <code>vault_kv_secret_v2</code>.</li>
+    <li><strong>Credenciales dinámicas:</strong> Vault puede generar credenciales de nube o de base de datos de corta duración para cada ejecución. Aunque acaben en el state, caducan en minutos. HCP Terraform hace algo parecido con las <em>dynamic provider credentials</em> (bloque 14).</li>
+    <li>El provider lee la dirección y el token de las variables de entorno <code>VAULT_ADDR</code> y <code>VAULT_TOKEN</code>. Nunca pongas el token en el código.</li>
+  </ul>
+
   <div class="quiz" data-quiz="b-test"></div>
   <div class="practice">
     <h3>Practica</h3>
@@ -2223,6 +2472,57 @@ run "all_instances_tagged" {
         </details>
       </li>
       <li>Configura pre-commit en el repositorio y haz un commit con un fichero mal formateado.</li>
+      <li>Gratis y en local: levanta Vault en modo desarrollo, escribe una contraseña efímera con un argumento write-only y comprueba qué llega al state y qué no.
+        <details class="sol"><summary>Ver solución</summary>
+<script type="text/x-code" data-lang="sh" data-file="terminal">
+# Vault en modo dev: datos en memoria, token raíz "root", KV v2 montado en secret/
+docker run -d --name vault --cap-add=IPC_LOCK -p 8200:8200 \
+  -e VAULT_DEV_ROOT_TOKEN_ID=root hashicorp/vault:latest
+export VAULT_ADDR=http://127.0.0.1:8200 VAULT_TOKEN=root
+
+# Un secreto creado fuera de Terraform
+docker exec -e VAULT_ADDR=http://127.0.0.1:8200 -e VAULT_TOKEN=root vault \
+  vault kv put secret/legacy api_key=abc123
+</script>
+<script type="text/x-code" data-lang="hcl" data-file="~/tf-lab/vault/main.tf">
+terraform {
+  required_version = ">= 1.11"
+  required_providers {
+    vault  = { source = "hashicorp/vault", version = "~> 5.0" }
+    random = { source = "hashicorp/random", version = "~> 3.7" }
+  }
+}
+
+provider "vault" {} # usa VAULT_ADDR y VAULT_TOKEN
+
+ephemeral "random_password" "db" {
+  length = 24
+}
+
+# Escribir sin guardar el valor en el state
+resource "vault_kv_secret_v2" "db" {
+  mount                = "secret"
+  name                 = "app/db"
+  data_json_wo         = jsonencode({ password = ephemeral.random_password.db.result })
+  data_json_wo_version = 1
+}
+
+# Leer: forma clásica (el valor acaba en el state)
+data "vault_kv_secret_v2" "legacy" {
+  mount = "secret"
+  name  = "legacy"
+}
+</script>
+<script type="text/x-code" data-lang="sh" data-file="terminal">
+terraform init && terraform apply
+grep -c abc123 terraform.tfstate          # 1 o más: el data source lo guardó
+grep -o '"data_json_wo[^,]*' terraform.tfstate   # "data_json_wo": null
+docker exec -e VAULT_ADDR=http://127.0.0.1:8200 -e VAULT_TOKEN=root vault \
+  vault kv get secret/app/db               # la contraseña sí está en Vault
+</script>
+          <p>Después cambia el data source por <code>ephemeral "vault_kv_secret_v2" "legacy"</code> con los mismos argumentos. Fíjate en que no podrías exponerlo con un <code>output</code> del módulo raíz, porque allí no se admiten valores efímeros. Aplica otra vez: <code>abc123</code> desaparece del state. Al terminar, <code>docker rm -f vault</code>.</p>
+        </details>
+      </li>
     </ol>
   </div>
   <button type="button" class="done-btn" data-block="b-test" aria-pressed="false">Marcar bloque como completado</button>
@@ -2333,7 +2633,7 @@ pipelines:
   </div>
 
   <h3>Plataformas especializadas</h3>
-  <p>Si no quieres montar el flujo a mano: <a href="https://www.runatlantis.io" target="_blank" rel="noopener">Atlantis</a> (open source, comenta el plan en el PR y aplica con un comentario <code>atlantis apply</code>), <a href="https://developer.hashicorp.com/terraform/cloud-docs" target="_blank" rel="noopener">HCP Terraform</a> (state, ejecuciones, políticas y registro privado de HashiCorp), y alternativas como Spacelift, env0 o Scalr.</p>
+  <p>Si no quieres montar el flujo a mano: <a href="https://www.runatlantis.io" target="_blank" rel="noopener">Atlantis</a> (open source, comenta el plan en el PR y aplica con un comentario <code>atlantis apply</code>), <a href="https://developer.hashicorp.com/terraform/cloud-docs" target="_blank" rel="noopener">HCP Terraform</a> (state, ejecuciones, políticas y registro privado de HashiCorp; lo tienes a fondo en el <a href="#b-hcp">bloque 14</a>), y alternativas como Spacelift, env0 o Scalr.</p>
 
   <h3>Prácticas de equipo</h3>
   <ul>
@@ -2358,8 +2658,229 @@ pipelines:
 </section>
 
 <!-- ============ 14 ============ -->
+<section class="block" id="b-hcp" data-track>
+  <p class="eyebrow">Bloque 14 · Plataforma · ~5 h · gratis</p>
+  <h2>HCP Terraform: state, ejecuciones y gobierno compartidos</h2>
+  <p class="lead">HCP Terraform (antes Terraform Cloud) es la plataforma de HashiCorp para usar Terraform en equipo. Guarda el state, ejecuta los planes, gestiona variables y permisos y aplica políticas. Es un dominio entero del examen y puedes practicarlo con el plan gratuito.</p>
+  <div class="goals"><strong>Al terminar sabrás</strong>
+    <ul>
+      <li>Cómo se organizan organizaciones, proyectos y workspaces.</li>
+      <li>Conectar la CLI con <code>terraform login</code> y el bloque <code>cloud</code>, y migrar un state.</li>
+      <li>Los tres flujos de trabajo (VCS, CLI y API) y los modos de ejecución.</li>
+      <li>Las funciones de colaboración y gobierno: equipos, variable sets, run triggers, registro privado, políticas, credenciales dinámicas y health.</li>
+    </ul>
+  </div>
+
+  <h3>Tres productos, un mismo Terraform</h3>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Producto</th><th>Qué es</th><th>Dónde corre</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Terraform Community Edition</strong></td><td>La CLI <code>terraform</code> que has usado hasta ahora</td><td>Tu máquina o tu CI</td></tr>
+        <tr><td><strong>HCP Terraform</strong></td><td>Plataforma SaaS: state remoto, ejecuciones remotas, variables, equipos, registro privado y políticas</td><td>Infraestructura de HashiCorp (<code>app.terraform.io</code>)</td></tr>
+        <tr><td><strong>Terraform Enterprise</strong></td><td>La misma plataforma, autoalojada, para empresas con requisitos de aislamiento</td><td>Tus servidores o tu nube</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="note"><span class="lbl">Qué incluye el plan Free</span>
+    <p>Cuesta 0 € hasta <strong>500 recursos gestionados</strong>, con usuarios ilimitados, workspaces y proyectos ilimitados y <strong>una ejecución remota a la vez</strong> (el resto espera en cola). Incluye ejecución remota, integración con VCS, registro privado de módulos y run tasks. <code>terraform_data</code>, <code>null_resource</code> y los data sources no cuentan como recursos gestionados, así que los ejercicios de este bloque no se acercan al límite. Los equipos con permisos propios, las auditorías, la estimación de costes y la detección de drift son de los planes de pago. Conviene conocerlos para el examen, aunque no puedas probarlos todos gratis.</p>
+  </div>
+
+  <h3>Organización, proyectos y workspaces</h3>
+<pre class="tree">organización  acme                    <span class="t-c"># facturación, usuarios, equipos, políticas, registro privado</span>
+├── proyecto  networking              <span class="t-c"># agrupa workspaces y da permisos a equipos de una vez</span>
+│   ├── workspace  network-dev        <span class="t-c"># un state, sus variables, su historial de ejecuciones</span>
+│   └── workspace  network-prod
+└── proyecto  payments
+    ├── workspace  payments-api-dev
+    └── workspace  payments-api-prod</pre>
+  <ul>
+    <li><strong>Organización:</strong> el contenedor de todo. Tiene usuarios, equipos, políticas, variable sets y el registro privado.</li>
+    <li><strong>Proyecto:</strong> agrupa workspaces relacionados (por equipo, aplicación o dominio). Los permisos y los variable sets se pueden asignar al proyecto completo. Todo workspace pertenece a un proyecto; si no eliges ninguno, va al <em>Default Project</em>.</li>
+    <li><strong>Workspace:</strong> una configuración con su state, sus variables, sus permisos, sus ejecuciones y su versión de Terraform. Organízalos por componente y entorno, como <code>network-prod</code>: un workspace gigante es tan malo como un state gigante.</li>
+  </ul>
+
+  <h3>Tres formas de lanzar ejecuciones</h3>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Flujo</th><th>Cómo empieza una ejecución</th><th>Cuándo usarlo</th></tr></thead>
+      <tbody>
+        <tr><td><strong>VCS-driven</strong></td><td>Conectas el workspace a un repositorio. Cada pull request lanza un <em>plan especulativo</em> (solo plan, no se puede aplicar) y cada merge a la rama configurada lanza un plan y un apply</td><td>El flujo GitOps habitual en equipos</td></tr>
+        <tr><td><strong>CLI-driven</strong></td><td>Ejecutas <code>terraform plan</code> / <code>apply</code> en tu terminal. El código se sube a HCP, se ejecuta allí y ves la salida en directo en tu terminal</td><td>Aprender, migrar proyectos existentes, CI propio</td></tr>
+        <tr><td><strong>API-driven</strong></td><td>Una herramienta sube el código y crea la ejecución por la API</td><td>Integraciones a medida y plataformas internas</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Cada workspace tiene un <strong>modo de ejecución</strong>: <em>remote</em> (por defecto, las operaciones corren en HCP), <em>local</em> (corren en tu máquina y HCP solo guarda el state) o <em>agent</em> (corren en un agente que instalas en tu red privada).</p>
+
+  <h3>Ciclo de una ejecución</h3>
+  <ol class="steps">
+    <li><b>Pending</b>En cola: una sola ejecución por workspace a la vez</li>
+    <li><b>Plan</b>En un entorno efímero de HCP</li>
+    <li><b>Cost estimation</b>Coste mensual estimado (planes de pago)</li>
+    <li><b>Policy check</b>Sentinel u OPA, después del plan y antes del apply</li>
+    <li><b>Apply</b>Confirmación manual o <em>auto-apply</em></li>
+  </ol>
+  <p>Las <strong>run tasks</strong> conectan herramientas externas (escáneres de seguridad, control de costes) en fases fijas de la ejecución: antes del plan, después del plan o antes del apply.</p>
+
+  <h3>Conectar la CLI</h3>
+<script type="text/x-code" data-lang="sh" data-file="terminal">
+terraform login            # abre el navegador, crea un token y lo guarda en
+                           # ~/.terraform.d/credentials.tfrc.json (en texto plano)
+</script>
+<script type="text/x-code" data-lang="hcl" data-file="versions.tf">
+terraform {
+  cloud {
+    organization = "mi-org"        # hostname por defecto: app.terraform.io
+
+    workspaces {
+      name    = "tf-lab-dev"      # un workspace concreto…
+      project = "tf-lab"
+      # tags = ["tf-lab"]         # …o todos los que tengan esta etiqueta (excluyente con name)
+    }
+  }
+}
+</script>
+  <ul>
+    <li>Después de añadir el bloque, ejecuta <code>terraform init</code>. Si ya tenías state local, Terraform te ofrece migrarlo al workspace.</li>
+    <li>Igual que <code>backend</code>, el bloque <code>cloud</code> <strong>no admite variables ni locals</strong>. Para no fijar valores en el código existen <code>TF_CLOUD_ORGANIZATION</code>, <code>TF_CLOUD_PROJECT</code>, <code>TF_CLOUD_HOSTNAME</code> y <code>TF_WORKSPACE</code>.</li>
+    <li>Con <code>tags</code>, <code>terraform workspace list</code> y <code>terraform workspace select</code> funcionan sobre los workspaces de HCP con esa etiqueta.</li>
+    <li>El bloque <code>cloud</code> existe desde la 1.1. En proyectos antiguos verás <code>backend "remote"</code>, que hace lo mismo con otra sintaxis.</li>
+    <li>En CI no se usa <code>terraform login</code>, porque es interactivo: el token se pasa con la variable de entorno <code>TF_TOKEN_app_terraform_io</code>.</li>
+  </ul>
+
+  <h3>Variables en HCP Terraform</h3>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Tipo</th><th>Para qué</th><th>Ejemplo</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Terraform variable</strong></td><td>Da valor a un <code>variable</code> de tu código, igual que un tfvars</td><td><code>instance_type = t3.micro</code></td></tr>
+        <tr><td><strong>Environment variable</strong></td><td>Variable de entorno en la máquina que ejecuta</td><td><code>AWS_REGION</code>, <code>TF_LOG</code></td></tr>
+        <tr><td><strong>Sensitive</strong></td><td>Se puede escribir pero nunca volver a leer en la interfaz ni en la API</td><td>Tokens, contraseñas</td></tr>
+        <tr><td><strong>Variable set</strong></td><td>Un grupo de variables que se aplica a varios workspaces, a proyectos enteros o a toda la organización</td><td>Credenciales compartidas, etiquetas comunes</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Si la misma variable aparece en un variable set y en el workspace, gana la del workspace, salvo que el set esté marcado como <em>priority</em>. En ese caso el set gana sobre todo lo demás.</p>
+
+  <h3>Colaboración y gobierno</h3>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Función</th><th>Qué resuelve</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Equipos y permisos</strong></td><td>Acceso por equipos a nivel de organización, proyecto o workspace (read, plan, write, admin). El equipo <em>owners</em> tiene control total</td></tr>
+        <tr><td><strong>Registro privado</strong></td><td>Publicar módulos y providers propios para la organización, con versiones, igual que el Registry público</td></tr>
+        <tr><td><strong>Políticas (Sentinel y OPA)</strong></td><td><em>Policy as code</em> sobre el plan: prohibir instancias grandes, exigir etiquetas, limitar regiones. Sentinel tiene tres niveles: <em>advisory</em> (solo avisa), <em>soft-mandatory</em> (bloquea, pero un usuario autorizado puede saltárselo) y <em>hard-mandatory</em> (bloquea siempre). Se agrupan en <em>policy sets</em></td></tr>
+        <tr><td><strong>Run triggers</strong></td><td>Cuando un workspace termina un apply, lanza automáticamente una ejecución en otro que depende de él (red → aplicación)</td></tr>
+        <tr><td><strong>Compartir outputs</strong></td><td>Un workspace lee los outputs de otro con <code>terraform_remote_state</code> o el data source <code>tfe_outputs</code>, si el otro comparte su state</td></tr>
+        <tr><td><strong>Credenciales dinámicas</strong></td><td>Confianza OIDC entre HCP y AWS, Azure, GCP o Vault: cada ejecución recibe credenciales temporales y no guardas claves de larga duración</td></tr>
+        <tr><td><strong>Health assessments</strong></td><td>Detección de drift (compara periódicamente la realidad con el state y avisa sin cambiar nada) y validación continua (vuelve a evaluar <code>check</code> y postcondiciones)</td></tr>
+        <tr><td><strong>Notificaciones, change requests y Explorer</strong></td><td>Avisos a Slack, correo o webhooks; tareas pendientes asignadas a un workspace; vista de toda la organización con versiones de Terraform, providers y módulos en uso</td></tr>
+        <tr><td><strong>Versión de Terraform por workspace</strong></td><td>Cada workspace fija su versión y se actualiza desde la configuración del workspace, sin tocar las máquinas de nadie</td></tr>
+      </tbody>
+    </table>
+  </div>
+<script type="text/x-code" data-lang="hcl" data-file="policies/restrict-instance-type.sentinel">
+# Sentinel: solo se permiten instancias pequeñas
+import "tfplan/v2" as tfplan
+
+allowed = ["t3.micro", "t3.small"]
+
+instances = filter tfplan.resource_changes as _, rc {
+  rc.type is "aws_instance" and rc.change.actions contains "create"
+}
+
+main = rule {
+  all instances as _, i { i.change.after.instance_type in allowed }
+}
+</script>
+
+  <div class="quiz" data-quiz="b-hcp"></div>
+  <div class="practice">
+    <h3>Practica (todo con el plan Free)</h3>
+    <ol>
+      <li>Crea una cuenta en <a href="https://app.terraform.io/public/signup/account" target="_blank" rel="noopener">app.terraform.io</a> y una organización con el plan Free. Crea un proyecto <code>tf-lab</code>. Ejecuta <code>terraform login</code>.</li>
+      <li>Ejecución remota guiada desde la CLI: crea un directorio con este código, ejecuta <code>terraform init</code> y <code>terraform apply</code>, y sigue la ejecución en la interfaz web (plan, apply, state y outputs).
+        <details class="sol"><summary>Ver código</summary>
+<script type="text/x-code" data-lang="hcl" data-file="~/tf-lab/hcp-network/main.tf">
+terraform {
+  cloud {
+    organization = "mi-org"
+    workspaces {
+      name    = "tf-lab-network"
+      project = "tf-lab"
+    }
+  }
+  required_providers {
+    random = { source = "hashicorp/random", version = "~> 3.7" }
+  }
+}
+
+variable "env" {
+  type    = string
+  default = "dev"
+}
+
+resource "random_pet" "vpc" {
+  prefix = var.env
+}
+
+# terraform_data no cuenta en el límite de recursos del plan Free
+resource "terraform_data" "vpc" {
+  input = "vpc-${random_pet.vpc.id}"
+}
+
+output "vpc_name" {
+  value = terraform_data.vpc.output
+}
+</script>
+          <p><code>terraform init</code> crea el workspace si no existe. Durante el plan verás <em>Running plan in HCP Terraform</em> y un enlace a la ejecución. En la pestaña <em>States</em> está cada versión del state.</p>
+        </details>
+      </li>
+      <li>En el workspace, crea la Terraform variable <code>env = staging</code> y lanza otra ejecución desde la interfaz (<em>New run</em>). Después crea un variable set con la variable de entorno <code>TF_LOG = INFO</code>, aplícalo al proyecto y comprueba que aparece en los logs de la siguiente ejecución.</li>
+      <li>Migra un state local: coge el proyecto de Docker o el de <code>random</code> del bloque 06, aplícalo en local, añade un bloque <code>cloud</code> con un workspace nuevo en modo de ejecución <em>local</em> y ejecuta <code>terraform init</code>. Acepta la migración y comprueba que el state aparece en HCP.
+        <details class="sol"><summary>Ver solución</summary>
+          <p>El modo <em>local</em> es necesario con Docker: la ejecución remota no puede ver el Docker de tu máquina. Se cambia en <em>Settings → General → Execution Mode</em>, o se crea primero el workspace en la interfaz con ese modo. Tras migrar, borra <code>terraform.tfstate</code> local: ya no se usa.</p>
+        </details>
+      </li>
+      <li>Dos workspaces conectados: crea <code>tf-lab-app</code>, que lee el output del workspace anterior, y añade un run trigger para que cada apply de <code>tf-lab-network</code> lance un plan en <code>tf-lab-app</code>.
+        <details class="sol"><summary>Ver código</summary>
+<script type="text/x-code" data-lang="hcl" data-file="~/tf-lab/hcp-app/main.tf">
+terraform {
+  cloud {
+    organization = "mi-org"
+    workspaces {
+      name    = "tf-lab-app"
+      project = "tf-lab"
+    }
+  }
+}
+
+data "terraform_remote_state" "network" {
+  backend = "remote"
+  config = {
+    organization = "mi-org"
+    workspaces = { name = "tf-lab-network" }
+  }
+}
+
+resource "terraform_data" "app" {
+  input = "app en ${data.terraform_remote_state.network.outputs.vpc_name}"
+}
+</script>
+          <p>En <code>tf-lab-network</code>, <em>Settings → General → Remote state sharing</em>: comparte el state con <code>tf-lab-app</code>. En <code>tf-lab-app</code>, <em>Settings → Run Triggers</em>: añade <code>tf-lab-network</code> como origen. Cambia <code>env</code> en network, aplica y verás cómo se encola una ejecución en app.</p>
+        </details>
+      </li>
+      <li>Flujo VCS: sube <code>hcp-network</code> a un repositorio de GitHub, crea un workspace <em>Version Control</em> conectado a él, abre un pull request que cambie el <code>default</code> de <code>env</code> y observa el plan especulativo en el PR. Haz merge y mira el apply.</li>
+      <li>Limpieza: en cada workspace, <em>Settings → Destruction and Deletion</em> → <em>Queue destroy plan</em> y después borra el workspace.</li>
+    </ol>
+  </div>
+  <button type="button" class="done-btn" data-block="b-hcp" aria-pressed="false">Marcar bloque como completado</button>
+</section>
+
+<!-- ============ 15 ============ -->
 <section class="block" id="b-proj" data-track>
-  <p class="eyebrow">Bloque 14 · Proyecto final · ~10 h</p>
+  <p class="eyebrow">Bloque 15 · Proyecto final · ~10 h</p>
   <h2>Proyecto final: una web en AWS de principio a fin</h2>
   <p class="lead">Junta todo lo aprendido en un repositorio que podrías enseñar en una entrevista: red, servidores, dos entornos, state remoto, tests y pipeline. Marca cada tarea al terminarla; se guarda en este navegador.</p>
 <pre class="tree">tf-web/
@@ -2418,6 +2939,106 @@ pipelines:
   <button type="button" class="done-btn" data-block="b-proj" aria-pressed="false">Marcar bloque como completado</button>
 </section>
 
+<!-- ============ 16 ============ -->
+<section class="block" id="b-exam" data-track>
+  <p class="eyebrow">Bloque 16 · Certificación · ~6 h</p>
+  <h2>Preparar el examen Terraform Associate (004)</h2>
+  <p class="lead">Con los bloques 01 a 15 tienes todo el temario. Aquí está lo que necesitas del examen en sí: formato, qué entra en cada objetivo y dónde lo estudiaste, las trampas más frecuentes y un simulacro con preguntas en el estilo oficial.</p>
+  <div class="goals"><strong>Al terminar sabrás</strong>
+    <ul>
+      <li>Cómo es el examen y qué cambió en la versión 004.</li>
+      <li>Qué bloque repasar para cada objetivo oficial.</li>
+      <li>Detectar las trampas típicas de las preguntas.</li>
+      <li>Si estás listo, con un simulacro cronometrado.</li>
+    </ul>
+  </div>
+
+  <h3>El examen</h3>
+  <div class="tbl-wrap">
+    <table>
+      <tbody>
+        <tr><td>Duración</td><td>1 hora</td></tr>
+        <tr><td>Tipos de pregunta</td><td>Verdadero/falso, opción múltiple (una correcta) y respuesta múltiple (el enunciado dice cuántas elegir, por ejemplo <em>Choose two</em>)</td></tr>
+        <tr><td>Versión evaluada</td><td>Terraform 1.12</td></tr>
+        <tr><td>Idioma</td><td>Inglés. Por eso el simulacro está en inglés</td></tr>
+        <tr><td>Formato</td><td>Online con supervisión remota. Reserva y requisitos en la <a href="https://developer.hashicorp.com/certifications/infrastructure-automation" target="_blank" rel="noopener">página oficial</a></td></tr>
+        <tr><td>Número de preguntas, precio y validez</td><td>Confírmalos en la página oficial antes de reservar, porque cambian entre versiones. En la 003 eran 57 preguntas, 70,50 USD y 2 años de validez</td></tr>
+        <tr><td>Requisitos previos</td><td>Ninguno formal. HashiCorp recomienda soltura con la terminal y nociones de infraestructura en la nube y local</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p><strong>Novedades de la 004 respecto a la 003:</strong> se evalúa Terraform 1.12 e incluye HCP Terraform. Hay cuatro temas nuevos: <code>depends_on</code> y <code>create_before_destroy</code> (4f), condiciones personalizadas (4g), valores efímeros y argumentos write-only (4h), y organizar workspaces y proyectos de HCP Terraform (8c). No hace falta saber ningún provider concreto: los ejemplos usan AWS, pero se pregunta por Terraform.</p>
+
+  <h3>Mapa de objetivos</h3>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Objetivo oficial</th><th>Dónde está</th></tr></thead>
+      <tbody>
+        <tr><td><strong>1 · IaC con Terraform</strong> — 1a qué es IaC · 1b ventajas · 1c multi-nube, híbrido y agnóstico</td><td><a href="#b-iac">01</a></td></tr>
+        <tr><td><strong>2 · Fundamentos</strong> — 2a instalar y versionar providers · 2b cómo usa Terraform los providers · 2c varios providers · 2d state</td><td><a href="#b-setup">02</a>, <a href="#b-res">05</a>, <a href="#b-state">07</a></td></tr>
+        <tr><td><strong>3 · Flujo principal</strong> — 3a flujo · 3b init · 3c validate · 3d plan · 3e apply · 3f destroy · 3g fmt</td><td><a href="#b-hcl">03</a>, <a href="#b-flow">04</a></td></tr>
+        <tr><td><strong>4 · Configuración</strong> — 4a resource y data · 4b referencias · 4c variables y outputs · 4d tipos complejos · 4e expresiones y funciones · 4f dependencias · 4g condiciones · 4h datos sensibles y Vault</td><td><a href="#b-hcl">03</a>, <a href="#b-res">05</a>, <a href="#b-vars">06</a>, <a href="#b-expr">08</a>, <a href="#b-life">09</a>, <a href="#b-test">12</a></td></tr>
+        <tr><td><strong>5 · Módulos</strong> — 5a orígenes · 5b ámbito de variables · 5c usar módulos · 5d versiones</td><td><a href="#b-mod">10</a></td></tr>
+        <tr><td><strong>6 · State</strong> — 6a backend local · 6b locking · 6c backend remoto · 6d drift</td><td><a href="#b-state">07</a>, <a href="#b-remote">11</a></td></tr>
+        <tr><td><strong>7 · Mantenimiento</strong> — 7a import · 7b inspeccionar el state · 7c logs detallados</td><td><a href="#b-state">07</a></td></tr>
+        <tr><td><strong>8 · HCP Terraform</strong> — 8a crear infraestructura · 8b colaboración y gobierno · 8c workspaces y proyectos · 8d integración</td><td><a href="#b-hcp">14</a></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Trampas frecuentes</h3>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>Si la pregunta dice…</th><th>Recuerda</th></tr></thead>
+      <tbody>
+        <tr><td><code>sensitive = true</code> protege el secreto</td><td>Solo lo oculta en la salida. Sigue en claro en el state. Lo que no se guarda son los valores <code>ephemeral</code> y los argumentos write-only</td></tr>
+        <tr><td>Qué comandos hacen refresh</td><td><code>plan</code> y <code>apply</code>, salvo con <code>-refresh=false</code>. <code>terraform refresh</code> está obsoleto</td></tr>
+        <tr><td><code>terraform taint</code></td><td>Obsoleto: usa <code>apply -replace=ADDR</code></td></tr>
+        <tr><td><code>terraform import</code> genera la configuración</td><td>El comando no. El bloque <code>import</code> con <code>plan -generate-config-out</code> sí</td></tr>
+        <tr><td>Variables en <code>backend</code> o <code>cloud</code></td><td>No se admiten. Usa <code>-backend-config</code> o variables de entorno</td></tr>
+        <tr><td><code>version</code> en un módulo local</td><td>Solo funciona con módulos de un registry. Los locales y los de git usan la ruta o <code>?ref=</code></td></tr>
+        <tr><td>Un módulo hijo lee <code>var.x</code> del padre</td><td>Imposible: el padre pasa valores como argumentos y lee los outputs del hijo con <code>module.nombre.output</code></td></tr>
+        <tr><td>Orden de precedencia de variables</td><td>De menor a mayor: <code>default</code> → <code>TF_VAR_</code> → <code>terraform.tfvars</code> → <code>terraform.tfvars.json</code> → <code>*.auto.tfvars</code> (orden alfabético) → <code>-var</code> y <code>-var-file</code> (el último gana)</td></tr>
+        <tr><td><code>terraform.tfvars</code> hay que pasarlo con <code>-var-file</code></td><td>Se carga solo. También <code>*.auto.tfvars</code>. Otros nombres sí necesitan <code>-var-file</code></td></tr>
+        <tr><td><code>~&gt; 1.2</code> frente a <code>~&gt; 1.2.0</code></td><td><code>~&gt; 1.2</code> admite cualquier 1.x desde la 1.2. <code>~&gt; 1.2.0</code> solo admite 1.2.x</td></tr>
+        <tr><td>Workspaces de CLI = workspaces de HCP</td><td>No. En la CLI son varios states de la misma configuración; en HCP son unidades independientes con state, variables y permisos propios</td></tr>
+        <tr><td>Los bloques <code>check</code> bloquean el apply</td><td>No: solo avisan. <code>precondition</code>, <code>postcondition</code> y <code>validation</code> sí detienen la operación</td></tr>
+        <tr><td><code>TF_LOG_PATH</code> activa los logs</td><td>Solo con <code>TF_LOG</code> definido</td></tr>
+        <tr><td><code>terraform destroy</code> borra todo lo de la cuenta</td><td>Solo lo que está en el state del directorio y workspace actuales</td></tr>
+        <tr><td>Políticas de Sentinel u OPA</td><td>Se evalúan después del plan y antes del apply</td></tr>
+        <tr><td><code>terraform validate</code> se conecta a la nube</td><td>No: solo comprueba sintaxis y coherencia interna. Necesita <code>init</code> antes para tener los providers</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Cómo usar este atlas para aprobar</h3>
+  <ol>
+    <li>Haz los bloques en orden con sus ejercicios. Los bloques 07, 11, 12 y 14 concentran muchas preguntas.</li>
+    <li>Repite las autoevaluaciones de cada bloque hasta acertarlas todas sin dudar.</li>
+    <li>Lee la tabla de trampas y la <a href="#b-ref">chuleta de comandos</a> el día antes.</li>
+    <li>Haz el simulacro. Cada intento elige preguntas distintas del banco y baraja las opciones. Repasa los dominios donde bajes del 80 % y repítelo hasta superarlo dos veces seguidas.</li>
+    <li>Haz también las <a href="https://developer.hashicorp.com/terraform/tutorials/certification-004/associate-questions-004" target="_blank" rel="noopener">preguntas de ejemplo oficiales</a>, que son gratuitas.</li>
+  </ol>
+
+  <h3>Simulacro de examen</h3>
+  <p>57 preguntas, 60 minutos y las respuestas solo al final, como en el examen real. HashiCorp no publica la nota de corte, así que toma el 80 % como referencia de seguridad. Tu mejor nota se guarda en este navegador.</p>
+  <div class="widget" id="exam">
+    <div class="w-head"><span class="w-tag">Simulacro</span><h4>Terraform Associate (004) · práctica</h4></div>
+    <div class="exam-bar">
+      <button type="button" class="btn primary" id="exam-start">Empezar simulacro</button>
+      <span class="exam-clock" id="exam-clock" aria-live="off">60:00</span>
+      <span class="exam-best" id="exam-best"></span>
+    </div>
+    <ol class="exam-qs" id="exam-qs"></ol>
+    <div class="exam-foot" id="exam-foot" hidden>
+      <span id="exam-count"></span>
+      <button type="button" class="btn primary" id="exam-submit">Entregar</button>
+    </div>
+    <div id="exam-res" aria-live="polite"></div>
+  </div>
+  <button type="button" class="done-btn" data-block="b-exam" aria-pressed="false">Marcar bloque como completado</button>
+</section>
+
 <!-- ============ REF ============ -->
 <section class="block" id="b-ref">
   <p class="eyebrow">Anexo · Para volver siempre</p>
@@ -2438,7 +3059,10 @@ pipelines:
       <li><a href="https://www.terraform-best-practices.com" target="_blank" rel="noopener">Terraform Best Practices</a><span>Anton Babenko. Gratuito, centrado en estructura de proyectos y convenciones.</span></li>
     </ul></div>
     <div class="rcard"><h4>Práctica y certificación</h4><ul>
-      <li><a href="https://developer.hashicorp.com/certifications/infrastructure-automation" target="_blank" rel="noopener">Certificación Terraform Associate</a><span>Examen oficial de nivel inicial. Esta guía cubre su temario; repasa la guía de estudio oficial antes.</span></li>
+      <li><a href="https://developer.hashicorp.com/certifications/infrastructure-automation" target="_blank" rel="noopener">Certificación Terraform Associate</a><span>Examen oficial de nivel inicial. Esta guía cubre todos los objetivos de la 004: mapa, trampas y simulacro en el <a href="#b-exam">bloque 16</a>.</span></li>
+      <li><a href="https://developer.hashicorp.com/terraform/tutorials/certification-004/associate-review-004" target="_blank" rel="noopener">Objetivos oficiales de la 004</a><span>Lista de objetivos y guía de estudio de HashiCorp.</span></li>
+      <li><a href="https://developer.hashicorp.com/terraform/tutorials/certification-004/associate-questions-004" target="_blank" rel="noopener">Preguntas de ejemplo oficiales</a><span>Gratuitas, con el mismo estilo que el examen.</span></li>
+      <li><a href="https://app.terraform.io/public/signup/account" target="_blank" rel="noopener">HCP Terraform (plan Free)</a><span>0 € hasta 500 recursos gestionados. Para practicar el bloque 14.</span></li>
       <li><a href="https://www.localstack.cloud" target="_blank" rel="noopener">LocalStack</a><span>Emula AWS en local para practicar sin coste.</span></li>
       <li><a href="https://www.youtube.com/results?search_query=freecodecamp+terraform+course" target="_blank" rel="noopener">Cursos en vídeo de freeCodeCamp</a><span>Cursos largos y gratuitos, incluido uno de preparación para la certificación.</span></li>
     </ul></div>
@@ -2479,6 +3103,14 @@ pipelines:
         <tr><td>terraform force-unlock ID</td><td>Liberar un lock colgado (con cuidado)</td></tr>
         <tr><td>terraform test</td><td>Ejecutar los tests <code>.tftest.hcl</code></td></tr>
         <tr><td>terraform show -json tfplan</td><td>Plan en JSON, para scripts y herramientas</td></tr>
+        <tr><td>terraform import ADDR ID</td><td>Importar un objeto al state (el bloque <code>resource</code> debe existir)</td></tr>
+        <tr><td>terraform state pull</td><td>Descargar el state actual, también si es remoto</td></tr>
+        <tr><td>terraform plan -refresh=false</td><td>Planificar sin consultar la infraestructura real</td></tr>
+        <tr><td>terraform untaint ADDR</td><td>Quitar la marca de reemplazo</td></tr>
+        <tr><td>terraform login</td><td>Obtener un token de HCP Terraform</td></tr>
+        <tr><td>TF_LOG=DEBUG TF_LOG_PATH=tf.log</td><td>Logs detallados en un fichero (TRACE, DEBUG, INFO, WARN, ERROR)</td></tr>
+        <tr><td>TF_VAR_nombre=valor</td><td>Dar valor a una variable desde el entorno</td></tr>
+        <tr><td>TF_TOKEN_app_terraform_io</td><td>Token de HCP Terraform en CI</td></tr>
       </tbody>
     </table>
   </div>
@@ -2495,12 +3127,22 @@ pipelines:
     <dt>Module</dt><dd>Carpeta de ficheros .tf con variables de entrada y outputs. El directorio donde ejecutas es el módulo raíz.</dd>
     <dt>Address</dt><dd>Nombre único de un recurso: <code>module.network.aws_subnet.public["eu-west-1a"]</code>.</dd>
     <dt>Lock file</dt><dd><code>.terraform.lock.hcl</code>: versiones y hashes exactos de los providers elegidos.</dd>
-    <dt>Workspace</dt><dd>Varios states para la misma configuración y el mismo backend.</dd>
+    <dt>Workspace (CLI)</dt><dd>Varios states para la misma configuración y el mismo backend.</dd>
+    <dt>Workspace (HCP)</dt><dd>Unidad de HCP Terraform con su propio state, variables, permisos e historial de ejecuciones.</dd>
+    <dt>HCP Terraform</dt><dd>Plataforma SaaS de HashiCorp (antes Terraform Cloud) para state, ejecuciones, variables, equipos y políticas. Terraform Enterprise es su versión autoalojada.</dd>
+    <dt>Project</dt><dd>Grupo de workspaces de HCP Terraform con permisos y variable sets comunes.</dd>
+    <dt>Variable set</dt><dd>Conjunto de variables de HCP Terraform que se aplica a varios workspaces o proyectos.</dd>
+    <dt>Run trigger</dt><dd>Regla que lanza una ejecución en un workspace cuando otro termina un apply.</dd>
+    <dt>Sentinel / OPA</dt><dd>Lenguajes de <em>policy as code</em> que HCP Terraform evalúa entre el plan y el apply.</dd>
+    <dt>Speculative plan</dt><dd>Plan de solo lectura, por ejemplo en un pull request, que no se puede aplicar.</dd>
+    <dt>Ephemeral</dt><dd>Valor que existe durante la ejecución y nunca se guarda en el plan ni en el state.</dd>
+    <dt>Write-only</dt><dd>Argumento (<code>*_wo</code>) que acepta valores efímeros y que Terraform guarda como <code>null</code>.</dd>
+    <dt>Backend local</dt><dd>El backend por defecto: state en <code>terraform.tfstate</code> del directorio, con lock del sistema operativo.</dd>
     <dt>Idempotencia</dt><dd>Aplicar lo mismo varias veces da el mismo resultado: sin cambios si ya coincide.</dd>
     <dt>Tainted</dt><dd>Recurso marcado para reemplazo, por ejemplo porque falló su creación.</dd>
     <dt>HCL</dt><dd>HashiCorp Configuration Language, el lenguaje de los ficheros .tf.</dd>
   </dl>
-  <footer class="end">Guía escrita para Terraform 1.x. Las versiones mínimas citadas (1.5 para <code>import</code>, 1.10 para <code>use_lockfile</code>, etc.) indican desde cuándo existe cada función. Ante la duda, la documentación oficial manda.</footer>
+  <footer class="end">Guía escrita para Terraform 1.x y alineada con el examen Terraform Associate (004), que evalúa la 1.12. Las versiones mínimas citadas (1.5 para <code>import</code>, 1.10 para <code>use_lockfile</code>, etc.) indican desde cuándo existe cada función. Ante la duda, la documentación oficial manda.</footer>
 </section>
 </main>
 </div>
@@ -2624,7 +3266,11 @@ const QUIZ = {
     { q: 'Borras terraform.tfstate y ejecutas plan. ¿Qué ocurre?', o: ['No changes', 'Propone crear todo de nuevo, porque ya no sabe que existe', 'Lo reconstruye leyendo la nube'], a: 1, why: 'Sin state, Terraform no puede relacionar el código con los objetos existentes. Aplicar crearía duplicados o chocaría con nombres únicos. Se arregla con import.' },
     { q: 'Alguien cambia un security group en la consola. ¿Qué mostrará el siguiente plan?', o: ['Nada', 'El drift, y propondrá devolverlo a lo que dice el código', 'Que el security group se va a destruir'], a: 1, why: 'Plan refresca la realidad y la compara con el código: lo que difiera se corrige.' },
     { q: 'Renombras <code>aws_instance.web</code> a <code>aws_instance.app</code> en el código sin hacer nada más. ¿Qué propone el plan?', o: ['Renombrarlo', 'Destruir web y crear app; un bloque <code>moved</code> lo evita', 'Nada'], a: 1, why: 'Para Terraform, la dirección es la identidad. <code>moved</code> le dice que es el mismo objeto.' },
-    { q: '¿Cuándo editar el tfstate a mano?', o: ['Cuando quieras', 'Como último recurso, con copia; usa los comandos state y los bloques moved, import y removed'], a: 1, why: 'Un error de edición puede hacer que Terraform destruya o duplique recursos.' }
+    { q: '¿Cuándo editar el tfstate a mano?', o: ['Cuando quieras', 'Como último recurso, con copia; usa los comandos state y los bloques moved, import y removed'], a: 1, why: 'Un error de edición puede hacer que Terraform destruya o duplique recursos.' },
+    { q: 'Tu configuración no tiene bloque <code>backend</code>. ¿Dónde está el state y tiene locking?', o: ['En terraform.tfstate del directorio actual, con locking del sistema operativo', 'En ~/.terraform.d, sin locking', 'En memoria: se pierde al terminar'], a: 0, why: 'Es el backend local. Su lock protege de dos procesos en la misma máquina, pero no sirve para trabajar en equipo.' },
+    { q: 'Exportas solo <code>TF_LOG_PATH=./tf.log</code> y ejecutas un plan. ¿Qué ocurre?', o: ['Se escriben logs de nivel TRACE en tf.log', 'No se registra nada: hace falta definir TF_LOG', 'Terraform da error'], a: 1, why: '<code>TF_LOG</code> activa los logs y fija el nivel; <code>TF_LOG_PATH</code> solo dice dónde escribirlos.' },
+    { q: 'Antes de ejecutar <code>terraform import aws_s3_bucket.logs mi-bucket</code>, ¿qué debe existir?', o: ['Nada', 'El bloque <code>resource "aws_s3_bucket" "logs"</code> en la configuración', 'Un bloque import'], a: 1, why: 'El comando necesita la dirección en el código para saber dónde colocar el objeto. Solo el bloque <code>import</code> puede generar la configuración.' },
+    { q: '¿Qué sustituye a <code>terraform taint</code>?', o: ['<code>terraform apply -replace=ADDR</code>', '<code>terraform state rm</code>', '<code>terraform refresh</code>'], a: 0, why: 'Con <code>-replace</code> el reemplazo aparece en el plan antes de aplicarse. taint marcaba el recurso en el state sin enseñártelo.' }
   ],
   'b-expr': [
     { q: 'Con <code>count</code> sobre la lista <code>["dev","staging","prod"]</code>, quitas <code>"staging"</code>. ¿Qué ocurre?', o: ['Solo se destruye staging', 'prod pasa al índice 1: se reemplaza [1] y se destruye [2]', 'Nada'], a: 1, why: 'Con count la identidad es la posición. Con for_each es la clave, y solo se destruiría staging.' },
@@ -2645,12 +3291,25 @@ const QUIZ = {
   'b-remote': [
     { q: 'Dos personas aplican a la vez sobre el mismo state sin locking. ¿Qué puede pasar?', o: ['Terraform las pone en cola automáticamente', 'Que una sobrescriba el state de la otra y se pierdan cambios', 'Nada'], a: 1, why: 'El locking garantiza que solo una operación escribe el state a la vez.' },
     { q: '¿Puedes usar <code>var.bucket</code> dentro de <code>backend "s3"</code>?', o: ['Sí', 'No; usa configuración parcial con -backend-config'], a: 1, why: 'El backend se configura antes de evaluar variables.' },
-    { q: 'Para separar dev y prod con aislamiento fuerte (cuentas y permisos distintos), ¿qué es mejor?', o: ['Workspaces en el mismo directorio', 'Un directorio y un state por entorno, reutilizando módulos'], a: 1, why: 'Los workspaces comparten backend y credenciales; son mejores para copias temporales.' }
+    { q: 'Para separar dev y prod con aislamiento fuerte (cuentas y permisos distintos), ¿qué es mejor?', o: ['Workspaces en el mismo directorio', 'Un directorio y un state por entorno, reutilizando módulos'], a: 1, why: 'Los workspaces comparten backend y credenciales; son mejores para copias temporales.' },
+    { q: 'Cambias el backend de local a <code>pg</code>. ¿Qué comando mueve el state?', o: ['terraform apply', 'terraform init -migrate-state', 'terraform state push'], a: 1, why: 'Cualquier cambio de backend requiere <code>init</code>, que copia el state existente al nuevo destino.' }
   ],
   'b-test': [
     { q: '¿Qué detecta tflint que <code>terraform validate</code> no?', o: ['Errores de sintaxis', 'Problemas propios del provider (tipos de instancia inexistentes, etc.) y malas prácticas'], a: 1, why: 'validate solo comprueba el lenguaje; tflint conoce las reglas de cada provider.' },
     { q: 'En <code>terraform test</code>, ¿qué hace <code>command = plan</code>?', o: ['Crea infraestructura real', 'Evalúa las aserciones sobre el plan sin crear nada'], a: 1, why: 'Con <code>command = apply</code> sí crea y luego destruye. Con mock_provider ni siquiera necesitas credenciales.' },
-    { q: '¿Para qué sirven Trivy y Checkov?', o: ['Formatear código', 'Detectar configuración insegura: buckets públicos, puertos abiertos, cifrado ausente'], a: 1, why: 'Son escáneres de seguridad de IaC; se ejecutan en local y en CI.' }
+    { q: '¿Para qué sirven Trivy y Checkov?', o: ['Formatear código', 'Detectar configuración insegura: buckets públicos, puertos abiertos, cifrado ausente'], a: 1, why: 'Son escáneres de seguridad de IaC; se ejecutan en local y en CI.' },
+    { q: '¿Cómo pasas una contraseña a <code>aws_db_instance</code> sin que quede en el state?', o: ['Con una variable <code>sensitive = true</code>', 'Con <code>password_wo</code> alimentado por un valor ephemeral, y <code>password_wo_version</code>', 'Con un output sensible'], a: 1, why: 'Los argumentos write-only (1.11+) aceptan valores efímeros y Terraform guarda <code>null</code>. sensitive solo oculta el valor en la salida.' },
+    { q: '¿Dónde se puede declarar un output con <code>ephemeral = true</code>?', o: ['En cualquier módulo', 'Solo en módulos hijos', 'Solo en el módulo raíz'], a: 1, why: 'Sirve para pasar valores efímeros entre módulos. El módulo raíz no admite outputs efímeros porque sus outputs se guardan en el state.' },
+    { q: 'Lees un secreto con <code>data "vault_kv_secret_v2"</code>. ¿Dónde acaba el valor?', o: ['En ningún sitio', 'En el state, en claro', 'Solo en Vault'], a: 1, why: 'Los data sources guardan sus atributos en el state. El recurso <code>ephemeral "vault_kv_secret_v2"</code> lo evita.' }
+  ],
+  'b-hcp': [
+    { q: '¿Qué diferencia hay entre un workspace de la CLI y uno de HCP Terraform?', o: ['Ninguna', 'En HCP cada workspace tiene su propio state, variables, permisos e historial, y puede ser una configuración totalmente independiente', 'Los de HCP no tienen state'], a: 1, why: 'En la CLI, un workspace es otro state de la misma configuración y el mismo backend.' },
+    { q: '¿Qué comando obtiene un token de API de HCP Terraform para la CLI?', o: ['terraform init', 'terraform login', 'terraform workspace new'], a: 1, why: 'Abre el navegador y guarda el token en <code>credentials.tfrc.json</code>. En CI se usa <code>TF_TOKEN_app_terraform_io</code>.' },
+    { q: 'Quieres dar las mismas credenciales de nube a 20 workspaces. ¿Qué usas?', o: ['Un variable set aplicado al proyecto u organización', 'Copiarlas en cada workspace', 'Un bloque cloud con variables'], a: 0, why: 'Los variable sets se definen una vez y se aplican a workspaces, proyectos o a toda la organización.' },
+    { q: 'Cuando la red cambia, quieres que el workspace de la aplicación lance un plan automáticamente. ¿Qué configuras?', o: ['Un run trigger', 'Una policy de Sentinel', 'Un run task'], a: 0, why: 'Los run triggers encolan una ejecución en un workspace cuando otro termina un apply.' },
+    { q: '¿En qué momento se evalúan las políticas de Sentinel u OPA?', o: ['Antes del plan', 'Después del plan y antes del apply', 'Después del apply'], a: 1, why: 'Necesitan el plan para saber qué va a cambiar, y deben actuar antes de que se aplique.' },
+    { q: 'Un PR en un workspace conectado a VCS genera un plan. ¿Se puede aplicar?', o: ['Sí', 'No: es un plan especulativo, solo informativo'], a: 1, why: 'Los applies solo ocurren en la rama configurada, normalmente tras el merge.' },
+    { q: '¿Qué ofrecen las dynamic provider credentials?', o: ['Rotar las claves guardadas cada mes', 'Credenciales temporales por ejecución mediante OIDC, sin guardar claves de larga duración', 'Cifrar el state'], a: 1, why: 'HCP y la nube establecen una relación de confianza; cada ejecución recibe credenciales que caducan.' }
   ],
   'b-ci': [
     { q: '¿Por qué usar OIDC en el pipeline?', o: ['Es más rápido', 'Credenciales temporales por ejecución, sin access keys guardadas'], a: 1, why: 'No hay secretos de larga duración que rotar ni que puedan filtrarse.' },
@@ -2698,6 +3357,185 @@ function renderQuiz(box) {
   box.append(foot);
 }
 $$('.quiz').forEach(renderQuiz);
+
+/* ---------- mock exam ---------- */
+(() => {
+  const root = $('#exam');
+  if (!root) return;
+  const DOMAINS = ['', 'IaC', 'Fundamentos', 'Flujo principal', 'Configuración', 'Módulos', 'State', 'Mantenimiento', 'HCP Terraform'];
+  const TF = ['True', 'False'];
+  // [domain, question, options (null = True/False), correct indexes, explanation]
+  const BANK = [
+    [1, 'Which of the following is a benefit of Infrastructure as Code?', ['Infrastructure changes can be versioned, reviewed and reproduced', 'It removes the need to understand the target platform', 'It guarantees lower cloud costs', 'It replaces monitoring'], [0], 'El código se guarda en git, se revisa en PR y produce el mismo resultado cada vez.'],
+    [1, 'Which two statements describe how Terraform supports multi-cloud workflows? <em>(Choose two)</em>', ['A single configuration can manage resources from several providers', 'The same workflow (write, plan, apply) is used for every platform', 'Terraform automatically translates AWS resources into Azure resources', 'Terraform requires one state file per cloud provider'], [0, 1], 'Se comparte el flujo y el lenguaje; los recursos de cada nube son distintos y no se traducen.'],
+    [1, 'Terraform can only manage infrastructure in public clouds.', null, [1], 'Hay providers para centros de datos (vSphere, Proxmox) y para servicios SaaS (GitHub, Datadog, Okta).'],
+    [1, 'Terraform is declarative. What does that mean?', ['You describe the desired end state and Terraform works out the steps', 'You write every step in the order it must run', 'Terraform can only read existing infrastructure', 'Every apply recreates all resources'], [0], 'Por eso es idempotente: si la realidad coincide con el código, no hace nada.'],
+    [1, 'Which tool is the best fit for installing and configuring software inside 200 existing servers?', ['A configuration management tool such as Ansible', 'Terraform', 'The Terraform Registry', 'HCP Terraform variable sets'], [0], 'Terraform crea y gestiona infraestructura; configurar software dentro de máquinas es tarea de gestión de configuración o de imágenes.'],
+    [2, 'By default, where does <code>terraform init</code> download providers from?', ['The Terraform Registry', 'The cloud vendor API', 'The Git repository of the configuration', 'They are bundled with the Terraform binary'], [0], 'El source <code>hashicorp/aws</code> equivale a <code>registry.terraform.io/hashicorp/aws</code>.'],
+    [2, 'What does the constraint <code>version = "~&gt; 5.2"</code> allow?', ['Any 5.x version from 5.2 onwards (&gt;= 5.2.0, &lt; 6.0.0)', 'Only 5.2.x patch releases', 'Any version newer than 5.2, including 6.x', 'Exactly 5.2.0'], [0], 'El operador ~&gt; solo deja crecer el último número indicado: aquí, el menor.'],
+    [2, 'What does the constraint <code>version = "~&gt; 5.2.1"</code> allow?', ['&gt;= 5.2.1 and &lt; 5.3.0', '&gt;= 5.2.1 and &lt; 6.0.0', 'Exactly 5.2.1', 'Any version'], [0], 'Con tres números, solo puede crecer el de parche.'],
+    [2, 'The <code>.terraform.lock.hcl</code> file should be committed to version control.', null, [0], 'Fija versiones y hashes exactos de los providers para todo el equipo. La carpeta <code>.terraform/</code> no se sube.'],
+    [2, 'You must create resources in two AWS regions from one configuration. What do you use?', ['A second provider block with <code>alias</code>, selected with <code>provider = aws.&lt;alias&gt;</code>', 'Two terraform blocks', 'A second entry in required_providers with a different source', 'A separate state file per region'], [0], 'Cada configuración adicional de un provider lleva un alias; los recursos la eligen con el meta-argumento provider.'],
+    [2, 'Which command upgrades providers to the newest versions allowed by the constraints, ignoring the versions recorded in the lock file?', ['terraform init -upgrade', 'terraform providers lock', 'terraform apply -upgrade', 'terraform get'], [0], 'Sin <code>-upgrade</code>, init respeta las versiones del lock file.'],
+    [2, 'Which two are purposes of Terraform state? <em>(Choose two)</em>', ['Map resources in the configuration to real-world objects', 'Track metadata such as dependencies and cache attributes for performance', 'Store provider plugin binaries', 'Encrypt the secrets used by the configuration'], [0, 1], 'El state no cifra nada: guarda los atributos en claro.'],
+    [2, 'Which setting enforces a minimum Terraform CLI version?', ['<code>required_version</code> in the terraform block', 'The <code>version</code> argument in a provider block', 'The <code>source</code> argument in required_providers', 'The backend block'], [0], 'Ejemplo: <code>required_version = "&gt;= 1.12"</code>. Las versiones de providers van en required_providers.'],
+    [2, 'What is a Terraform provider?', ['A plugin that lets Terraform manage resources through a platform API', 'A file that stores state', 'A reusable group of resources', 'A remote execution environment'], [0], 'Core calcula qué hacer; el provider sabe cómo hacerlo en cada plataforma.'],
+    [2, 'Usernames and passwords passed to resources, even through variables, are stored in plain text in the state file.', null, [0], 'Es una pregunta de ejemplo oficial. La excepción son los valores ephemeral y los argumentos write-only.'],
+    [3, 'What is the core Terraform workflow?', ['Write → Plan → Apply', 'Plan → Write → Apply', 'Init → Apply → Validate', 'Apply → Plan → Destroy'], [0], 'Escribir el código, revisar el plan y aplicarlo.'],
+    [3, 'Which two commands read the real infrastructure by default before proposing changes? <em>(Choose two)</em>', ['terraform plan', 'terraform apply', 'terraform validate', 'terraform fmt', 'terraform output'], [0, 1], 'plan y apply hacen refresh salvo con <code>-refresh=false</code>.'],
+    [3, 'Which command checks syntax and internal consistency without contacting remote services?', ['terraform validate', 'terraform plan', 'terraform fmt', 'terraform show'], [0], 'validate no consulta APIs ni el state remoto, aunque necesita <code>init</code> para tener los providers.'],
+    [3, 'In CI you want the job to fail if files are not formatted, without modifying them. Which command?', ['terraform fmt -check', 'terraform fmt -recursive', 'terraform validate -fmt', 'terraform plan -check'], [0], '<code>-check</code> devuelve un código de error si algún fichero no está formateado. Añade <code>-recursive</code> para los subdirectorios.'],
+    [3, 'By default, which files does <code>terraform fmt</code> rewrite?', ['Configuration files in the current directory only', 'Every file in all subdirectories', 'Only main.tf', 'Nothing: it only reports problems'], [0], 'Para recorrer subdirectorios hay que añadir <code>-recursive</code>.'],
+    [3, 'Which three actions does <code>terraform init</code> perform? <em>(Choose three)</em>', ['Download providers', 'Download modules', 'Initialize the backend', 'Create resources', 'Format files'], [0, 1, 2], 'init prepara el directorio de trabajo y no toca la infraestructura.'],
+    [3, 'You saved a plan with <code>terraform plan -out=tfplan</code>. What does <code>terraform apply tfplan</code> do?', ['Applies exactly that plan without asking for confirmation', 'Creates a new plan and asks for confirmation', 'Shows the plan without applying it', 'Fails unless you add -auto-approve'], [0], 'Un plan guardado ya se revisó, así que no pide confirmación. Si el state cambió, Terraform lo rechaza.'],
+    [3, 'How do you preview what <code>terraform destroy</code> would remove without removing anything?', ['terraform plan -destroy', 'terraform destroy -check', 'terraform show -destroy', 'terraform state rm'], [0], 'destroy equivale a <code>apply -destroy</code>; con plan solo ves el plan de destrucción.'],
+    [3, '<code>terraform destroy</code> removes only the resources tracked in the current working directory and workspace state.', null, [0], 'Lo que no está en el state no existe para Terraform.'],
+    [3, 'A plan shows <code>-/+</code> next to a resource. What does it mean?', ['The resource will be destroyed and created again', 'It will be updated in place', 'It is a data source being read', 'It will be imported'], [0], 'Busca <code># forces replacement</code> para saber qué argumento lo provoca.'],
+    [4, 'What is the difference between a <code>resource</code> and a <code>data</code> block?', ['A data block reads existing objects; a resource block creates and manages them', 'A data block creates read-only resources', 'They are interchangeable', 'A resource block can only be used inside modules'], [0], 'Un data source nunca crea ni destruye nada.'],
+    [4, 'How do you reference the <code>id</code> of <code>resource "aws_vpc" "main"</code>?', ['aws_vpc.main.id', 'resource.aws_vpc.main.id', 'data.aws_vpc.main.id', 'var.aws_vpc.main.id'], [0], 'Tipo.nombre.atributo. El prefijo <code>data.</code> es para data sources.'],
+    [4, 'A variable has a default, a value in terraform.tfvars, a value in TF_VAR_env and a <code>-var</code> flag. Which value wins?', ['The -var flag', 'terraform.tfvars', 'TF_VAR_env', 'The default'], [0], 'Orden: default → TF_VAR_ → terraform.tfvars → *.auto.tfvars → -var/-var-file.'],
+    [4, 'You defined values in <code>terraform.tfvars</code> in the configuration directory. Which commands use them? ', ['Both terraform plan and terraform plan -var-file=terraform.tfvars', 'Only terraform plan -var-file=terraform.tfvars', 'Neither: tfvars files are only used by apply', 'Only when TF_VAR_FILE is set'], [0], 'terraform.tfvars y *.auto.tfvars se cargan solos; pasarlo con -var-file también funciona.'],
+    [4, 'How do you set the variable <code>region</code> through an environment variable?', ['export TF_VAR_region=eu-west-1', 'export TERRAFORM_region=eu-west-1', 'export VAR_region=eu-west-1', 'export TF_region=eu-west-1'], [0], 'El prefijo es <code>TF_VAR_</code> seguido del nombre exacto.'],
+    [4, 'Which type constraint fits <code>{ name = "web", port = 80 }</code> with fixed, typed attributes?', ['object({ name = string, port = number })', 'map(string)', 'list(any)', 'tuple([string])'], [0], 'object tiene atributos con nombre y tipo propio; un map tiene todos los valores del mismo tipo.'],
+    [4, 'How would you read the CIDR for us-east-1 from <code>variable "vpc_cidrs" { type = map(string) }</code>?', ['var.vpc_cidrs["us-east-1"]', 'var.vpc_cidrs[0]', 'vpc_cidrs["us-east-1"]', 'var.vpc_cidrs.0'], [0], 'Los mapas se indexan por clave y las variables llevan el prefijo var.'],
+    [4, 'Which expression builds a map from <code>var.names</code> with upper-case values?', ['{ for n in var.names : n =&gt; upper(n) }', '[ for n in var.names : n =&gt; upper(n) ]', 'map(var.names, upper)', 'toset(upper(var.names))'], [0], 'Llaves con =&gt; producen un mapa; corchetes producen una lista.'],
+    [4, 'Which values does <code>for_each</code> accept?', ['A map or a set of strings', 'Any list', 'Only numbers', 'Only a single string'], [0], 'Convierte una lista con <code>toset()</code>. Con count la identidad es la posición; con for_each es la clave.'],
+    [4, 'You need several <code>ingress</code> nested blocks generated from a list. What do you use?', ['A dynamic block', 'count on the nested block', 'A module', 'A for_each on the provider'], [0], '<code>dynamic "ingress" { for_each = ... content { ... } }</code>.'],
+    [4, 'A resource must be created after an IAM policy it never references. How do you express that?', ['depends_on', 'create_before_destroy', 'A moved block', 'ignore_changes'], [0], 'Las referencias crean dependencias implícitas; depends_on es para las que Terraform no puede ver.'],
+    [4, 'A replacement must not cause downtime: the new object should exist before the old one is removed. What do you set?', ['lifecycle { create_before_destroy = true }', 'lifecycle { prevent_destroy = true }', 'depends_on', 'lifecycle { ignore_changes = all }'], [0], 'Por defecto Terraform destruye primero y crea después.'],
+    [4, 'You want to reject values of <code>var.env</code> other than dev or prod before any plan runs. What do you use?', ['A validation block inside the variable', 'A check block', 'A postcondition', 'sensitive = true'], [0], 'validation se evalúa al leer la variable y detiene la operación con tu mensaje.'],
+    [4, 'Which two custom conditions stop the operation when they fail? <em>(Choose two)</em>', ['precondition', 'postcondition', 'Assertions in a check block', 'An output description'], [0, 1], 'Los bloques check solo generan avisos.'],
+    [4, 'Setting <code>sensitive = true</code> on a variable prevents its value from being written to the state file.', null, [1], 'Solo lo oculta en la salida de plan, apply y output.'],
+    [4, 'Which feature lets you pass a secret to a resource argument without persisting it to plan or state?', ['Write-only arguments (for example password_wo) fed by ephemeral values', 'Sensitive outputs', 'Local values', 'terraform_remote_state'], [0], 'Disponibles desde la 1.11; se acompañan de un argumento <code>_wo_version</code>.'],
+    [4, 'Which statement about outputs with <code>ephemeral = true</code> is correct?', ['They are only allowed in child modules', 'They are only allowed in the root module', 'They are stored encrypted in state', 'They require HCP Terraform'], [0], 'Sirven para pasar valores efímeros entre módulos sin guardarlos.'],
+    [4, 'What is the recommended way to give the Vault provider its token?', ['An environment variable such as VAULT_TOKEN or an ephemeral variable, never hard-coded', 'A token written in the provider block', 'A token committed in terraform.tfvars', 'A token saved in an output'], [0], 'Nada de secretos en el código ni en ficheros commiteados.'],
+    [4, 'Which function returns a fallback value when an expression (for example a missing attribute) fails?', ['try', 'coalesce', 'lookup', 'element'], [0], 'try evalúa sus argumentos en orden y devuelve el primero sin error. can devuelve true o false.'],
+    [4, 'Terraform lets you define your own functions in HCL.', null, [1], 'Solo hay funciones integradas, más las que exponen algunos providers desde la 1.8.'],
+    [5, 'How do you read the output <code>vpc_id</code> of <code>module "network"</code>?', ['module.network.vpc_id', 'var.network.vpc_id', 'output.network.vpc_id', 'network.vpc_id'], [0], 'Desde fuera de un módulo solo se ven sus outputs.'],
+    [5, 'A child module can read the input variables of its parent module directly.', null, [1], 'El padre pasa valores como argumentos del bloque module; cada módulo tiene su propio ámbito.'],
+    [5, 'How do you pin the version of a module from the public Terraform Registry?', ['With the version argument in the module block', 'With required_providers', 'With a version suffix in the module name', 'Registry modules cannot be pinned'], [0], 'Fija siempre la versión de módulos externos.'],
+    [5, 'The <code>version</code> argument works for modules sourced from a local path such as <code>./modules/network</code>.', null, [1], 'Solo vale para registries. Los módulos de git se fijan con <code>?ref=</code>.'],
+    [5, 'You added a new module block. What must you run before plan?', ['terraform init (or terraform get)', 'terraform validate', 'terraform apply -refresh-only', 'Nothing'], [0], 'Sin init, plan falla con <em>Module not installed</em>.'],
+    [5, 'Which two are valid module sources? <em>(Choose two)</em>', ['./modules/network', 'git::https://example.com/vpc.git?ref=v1.2.0', 'aws_vpc.main', 'var.module_path'], [0, 1], 'source debe ser un literal: no admite variables.'],
+    [5, 'Which files form the recommended minimal structure of a module?', ['main.tf, variables.tf and outputs.tf (plus README.md)', 'terraform.tfstate and main.tf', 'Only module.tf', 'providers.tf and backend.tf'], [0], 'Es la estructura estándar; los nombres son convención.'],
+    [6, 'A configuration has no backend block. Where is the state stored?', ['In terraform.tfstate in the working directory (local backend)', 'In HCP Terraform', 'In ~/.terraform.d', 'Nowhere: it is kept in memory'], [0], 'El backend local guarda también una copia anterior en terraform.tfstate.backup.'],
+    [6, 'What does state locking prevent?', ['Two operations writing the same state at the same time', 'Reading the state', 'Changes to the configuration', 'Provider upgrades'], [0], 'Sin locking, un apply puede sobrescribir el state de otro.'],
+    [6, 'You can use input variables inside a backend block.', null, [1], 'El backend se configura antes de evaluar variables. Usa -backend-config.'],
+    [6, 'You switched the backend from local to S3. What do you run?', ['terraform init (accepting the state migration)', 'terraform apply', 'terraform state push', 'terraform workspace new'], [0], '<code>terraform init -migrate-state</code> copia el state al nuevo backend.'],
+    [6, 'Someone changed a resource in the console. You want the state to reflect reality without changing infrastructure. Which command?', ['terraform apply -refresh-only', 'terraform apply', 'terraform import', 'terraform state rm'], [0], 'refresh-only actualiza el state y no toca la nube.'],
+    [6, 'You rename a resource in code and want to avoid a destroy and create. What do you add?', ['A moved block', 'An import block', 'A removed block', 'depends_on'], [0], 'Para Terraform la dirección es la identidad; moved le dice que es el mismo objeto.'],
+    [6, 'You want to stop managing a resource without destroying it, and have the change reviewed in a PR. What do you use?', ['A removed block with lifecycle { destroy = false }', 'terraform destroy -target', 'prevent_destroy', 'terraform taint'], [0], 'Desde la 1.7. <code>terraform state rm</code> hace lo mismo, pero fuera del código.'],
+    [6, 'Which backend stores state in HCP Terraform?', ['The cloud block (or the older remote backend)', 'backend "local"', 'backend "s3"', 'backend "consul"'], [0], 'El bloque cloud existe desde la 1.1.'],
+    [7, 'You want to bring an existing bucket under Terraform with a reviewable plan. What do you use?', ['An import block followed by terraform plan and apply', 'terraform import', 'terraform refresh', 'terraform state push'], [0], 'El bloque import aparece en el plan y puede generar configuración con -generate-config-out.'],
+    [7, 'What must exist before you run <code>terraform import ADDRESS ID</code>?', ['A resource block for ADDRESS in the configuration', 'An import block', 'A saved plan', 'Nothing'], [0], 'El comando no genera configuración.'],
+    [7, 'Which command lists every resource address in the state?', ['terraform state list', 'terraform show -list', 'terraform output', 'terraform graph'], [0], 'Para ver los atributos de uno: <code>terraform state show ADDR</code>.'],
+    [7, 'Which command shows all attributes of one resource in the state?', ['terraform state show aws_instance.web', 'terraform state list aws_instance.web', 'terraform output aws_instance.web', 'terraform get aws_instance.web'], [0], '<code>terraform show</code> sin argumentos muestra el state completo.'],
+    [7, 'How do you enable the most detailed logs and write them to a file?', ['TF_LOG=TRACE and TF_LOG_PATH=./tf.log', 'Only TF_LOG_PATH=./tf.log', 'terraform apply -verbose', 'TF_DEBUG=1'], [0], 'Niveles: TRACE, DEBUG, INFO, WARN, ERROR.'],
+    [7, 'Setting only TF_LOG_PATH enables logging.', null, [1], 'Hace falta TF_LOG; TF_LOG_PATH solo indica el fichero.'],
+    [7, 'Which variable limits detailed logs to provider plugins?', ['TF_LOG_PROVIDER', 'TF_LOG_CORE', 'TF_PROVIDER_DEBUG', 'TF_LOG_PLUGIN'], [0], 'TF_LOG_CORE hace lo mismo con Terraform Core.'],
+    [7, 'Which command replaces the deprecated <code>terraform taint</code>?', ['terraform apply -replace=ADDRESS', 'terraform state rm ADDRESS', 'terraform untaint', 'terraform refresh'], [0], 'Con -replace el reemplazo se ve en el plan antes de aplicarse.'],
+    [8, 'Which block connects a configuration to HCP Terraform?', ['A cloud block inside the terraform block', 'A provider "hcp" block', 'backend "local"', 'required_providers'], [0], 'Lleva organization y workspaces { name | tags, project }.'],
+    [8, 'Which command obtains an API token for HCP Terraform?', ['terraform login', 'terraform init -login', 'terraform token', 'terraform workspace select'], [0], 'Lo guarda en credentials.tfrc.json; en CI se usa TF_TOKEN_app_terraform_io.'],
+    [8, 'With remote execution mode, where does a CLI-driven <code>terraform plan</code> run?', ['In HCP Terraform, streaming the output to your terminal', 'On your laptop, uploading only the state', 'In your CI provider', 'It cannot run from the CLI'], [0], 'En modo local, las operaciones corren en tu máquina y HCP solo guarda el state.'],
+    [8, 'How do HCP Terraform workspaces differ from CLI workspaces?', ['Each HCP workspace has its own state, variables, permissions and run history, and can hold an independent configuration', 'They are identical', 'HCP workspaces share one state', 'HCP workspaces cannot be selected from the CLI'], [0], 'Los workspaces de la CLI son varios states de la misma configuración.'],
+    [8, 'What do you use to group related workspaces and grant a team access to all of them at once?', ['Projects', 'Variable sets', 'Run triggers', 'Policy sets'], [0], 'Todo workspace pertenece a un proyecto; los permisos se pueden dar a nivel de proyecto.'],
+    [8, 'What lets you reuse the same environment variables across many workspaces?', ['Variable sets', 'Run tasks', 'Remote state sharing', 'Speculative plans'], [0], 'Se aplican a workspaces, proyectos o a toda la organización.'],
+    [8, 'Which feature queues a run in the app workspace whenever the network workspace finishes an apply?', ['Run triggers', 'Run tasks', 'Notifications', 'Health assessments'], [0], 'Run tasks integran herramientas externas en fases de la ejecución; no encadenan workspaces.'],
+    [8, 'Which policy-as-code frameworks does HCP Terraform support?', ['Sentinel and OPA', 'Only Sentinel', 'Checkov and tflint', 'Rego only through run tasks'], [0], 'Las políticas se agrupan en policy sets.'],
+    [8, 'Sentinel and OPA policies are evaluated after the plan and before the apply.', null, [0], 'Necesitan el plan para saber qué va a cambiar.'],
+    [8, 'Which Sentinel enforcement level blocks a run but allows an authorized user to override it?', ['soft-mandatory', 'hard-mandatory', 'advisory', 'optional'], [0], 'advisory solo avisa; hard-mandatory no se puede saltar.'],
+    [8, 'Which feature gives each run short-lived cloud credentials without storing static keys?', ['Dynamic provider credentials (OIDC)', 'Sensitive variables', 'Variable sets', 'The private registry'], [0], 'HCP y la nube establecen una relación de confianza OIDC.'],
+    [8, 'Which two are features of the VCS-driven workflow? <em>(Choose two)</em>', ['Speculative plans on pull requests', 'Runs triggered automatically by commits to the configured branch', 'Runs executed only on developer laptops', 'State stored in the Git repository'], [0, 1], 'Los planes especulativos no se pueden aplicar.'],
+    [8, 'What do health assessments with drift detection do?', ['Periodically compare real infrastructure with the state and report drift without changing anything', 'Automatically revert every manual change', 'Scan modules for vulnerabilities', 'Estimate monthly costs'], [0], 'La validación continua vuelve a evaluar check y postcondiciones.'],
+    [8, 'Which product is the self-hosted distribution of HCP Terraform?', ['Terraform Enterprise', 'Terraform Community Edition', 'Terraform Registry', 'Sentinel'], [0], 'Community Edition es la CLI; HCP Terraform es el SaaS.'],
+    [8, 'Where can you publish internal modules so teams in your organization can use them with versions?', ['The HCP Terraform private registry', 'A variable set', 'A policy set', 'The state file'], [0], 'Funciona como el Registry público, pero solo para tu organización.']
+  ];
+  const SIZE = 57, MINUTES = 60;
+  const qsBox = $('#exam-qs'), res = $('#exam-res'), clock = $('#exam-clock'), foot = $('#exam-foot');
+  const startBtn = $('#exam-start'), submitBtn = $('#exam-submit'), count = $('#exam-count');
+  let picked = [], timer = 0, end = 0;
+
+  const shuffle = arr => {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+    return a;
+  };
+  const fmt = ms => { const s = Math.max(0, Math.round(ms / 1000)); return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`; };
+  const showBest = () => {
+    const b = store.get('tf-exam', null);
+    $('#exam-best').textContent = b ? `Mejor nota: ${b.best} % · último intento: ${b.last} %` : '';
+  };
+  const answered = () => picked.filter((_, i) => $$(`input[name="ex${i}"]:checked`, qsBox).length).length;
+  const updateCount = () => { count.textContent = `Respondidas ${answered()} de ${picked.length}`; };
+
+  function start() {
+    picked = shuffle(BANK).slice(0, SIZE).map(([d, q, o, a, why]) => {
+      const opts = (o || TF).map((text, i) => ({ text, ok: a.includes(i) }));
+      return { d, q, why, multi: a.length > 1, opts: o ? shuffle(opts) : opts };
+    });
+    qsBox.innerHTML = picked.map((p, i) =>
+      `<li class="q"><p class="q-t"><span class="q-n">${i + 1}</span><span>${p.q}</span></p>` +
+      p.opts.map((op, oi) => `<label class="q-opt"><input type="${p.multi ? 'checkbox' : 'radio'}" name="ex${i}" value="${oi}"><span>${op.text}</span></label>`).join('') +
+      `<p class="q-why" hidden></p></li>`).join('');
+    res.innerHTML = '';
+    foot.hidden = false;
+    submitBtn.disabled = false;
+    startBtn.textContent = 'Reiniciar simulacro';
+    updateCount();
+    end = Date.now() + MINUTES * 60000;
+    clearInterval(timer);
+    tick();
+    timer = setInterval(tick, 1000);
+  }
+  function tick() {
+    const left = end - Date.now();
+    clock.textContent = fmt(left);
+    clock.classList.toggle('low', left < 5 * 60000);
+    if (left <= 0) finish(true);
+  }
+  function finish(timeout) {
+    clearInterval(timer);
+    submitBtn.disabled = true;
+    const per = {};
+    let right = 0;
+    picked.forEach((p, i) => {
+      const li = qsBox.children[i];
+      const chosen = $$(`input[name="ex${i}"]`, li).map(x => x.checked);
+      const ok = p.opts.every((op, oi) => op.ok === chosen[oi]);
+      if (ok) right++;
+      per[p.d] = per[p.d] || [0, 0];
+      per[p.d][1]++; if (ok) per[p.d][0]++;
+      $$('label.q-opt', li).forEach((lab, oi) => {
+        lab.querySelector('input').disabled = true;
+        if (p.opts[oi].ok) lab.classList.add('ok'); else if (chosen[oi]) lab.classList.add('bad');
+      });
+      const w = $('.q-why', li);
+      w.hidden = false;
+      w.innerHTML = (ok ? '<strong>Correcto.</strong> ' : '<strong>Incorrecto.</strong> ') + p.why + `<span class="q-dom" style="display:block">Dominio ${p.d} · ${DOMAINS[p.d]}</span>`;
+    });
+    const pct = Math.round(right / picked.length * 100);
+    const prev = store.get('tf-exam', null);
+    store.set('tf-exam', { best: Math.max(pct, prev ? prev.best : 0), last: pct });
+    showBest();
+    const rows = Object.keys(per).sort().map(d => {
+      const [r, t] = per[d], dp = Math.round(r / t * 100);
+      return `<tr><td>${d} · ${DOMAINS[d]}</td><td>${r} / ${t}</td><td>${dp} %${dp < 80 ? ' · repasa' : ''}</td></tr>`;
+    }).join('');
+    res.innerHTML = `<div class="note${pct < 80 ? ' warn' : ''}"><span class="lbl">${timeout ? 'Tiempo agotado' : 'Resultado'}</span>` +
+      `<p><strong>${right} de ${picked.length} (${pct} %).</strong> ${pct >= 80 ? 'Buen margen: repite el simulacro con otras preguntas para confirmarlo.' : 'Repasa los dominios marcados y vuelve a intentarlo.'} Las explicaciones están debajo de cada pregunta.</p></div>` +
+      `<div class="tbl-wrap"><table><thead><tr><th>Dominio</th><th>Aciertos</th><th>%</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+    res.scrollIntoView({ behavior: REDUCE ? 'auto' : 'smooth', block: 'start' });
+  }
+
+  qsBox.addEventListener('change', updateCount);
+  startBtn.addEventListener('click', start);
+  submitBtn.addEventListener('click', () => {
+    const left = picked.length - answered();
+    if (left && !confirm(`Te quedan ${left} preguntas sin responder. ¿Entregar igualmente?`)) return;
+    finish(false);
+  });
+  showBest();
+})();
 
 /* ---------- progress, toc ---------- */
 const blocks = $$('section.block[data-track]');
