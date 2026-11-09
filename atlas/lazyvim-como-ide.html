@@ -213,7 +213,7 @@ README.md
 
     <div class="legend">
       <span><kbd class="lead">Space</kbd> tecla líder: púlsala y espera para ver el menú</span>
-      <span><kbd>gcc</kbd> teclas que se pulsan seguidas</span>
+      <span><kbd>gcc</kbd> teclas que se pulsan seguidas, en modo Normal y sin escribir <code>:</code> antes</span>
       <span><span class="keys"><kbd>Ctrl</kbd><i>+</i><kbd>s</kbd></span> a la vez</span>
       <span><span class="keys"><span class="cmd" style="font-family:var(--f-mono)">:w</span></span> comando: escríbelo y pulsa Enter</span>
     </div>
@@ -238,7 +238,8 @@ const S = [
       ['Nueva línea debajo / encima y escribir', 'o ‖ O'],
       ['Volver a modo Normal', 'Esc'],
       ['Guardar', 'Ctrl+s ‖ :w', 'Ctrl+S', 'Ctrl+s funciona en cualquier modo'],
-      ['Cerrar la ventana / salir de todo', ':q ‖ ␣ q q'],
+      ['Cerrar un archivo (pestaña)', '␣ b d', 'Ctrl+W', ':q no cierra el archivo, cierra la ventana: con el explorador abierto lo deja a pantalla completa'],
+      ['Salir de Neovim', '␣ q q ‖ :qa', '', 'si hay cambios sin guardar pregunta abajo: y guarda, n descarta'],
       ['Salir sin guardar', ':qa!'],
       ['Deshacer / rehacer', 'u ‖ Ctrl+r', 'Ctrl+Z / Ctrl+Y'],
       ['Repetir el último cambio', '.'],
@@ -264,7 +265,7 @@ const S = [
       ['Comentar línea', 'Ctrl+/', 'gcc'],
       ['Mover línea', 'Alt+↑', 'Alt+k ‖ Alt+j'],
       ['Siguiente coincidencia', 'Ctrl+D', '* cgn'],
-      ['Varios cursores en columna', 'Alt+clic', 'Ctrl+v'],
+      ['Varios cursores en columna', 'Alt+clic', 'Ctrl+v ‖ Ctrl+q'],
       ['Ir a la definición', 'F12', 'gd'],
       ['Ver referencias', 'Shift+F12', 'gr'],
       ['Renombrar símbolo', 'F2', '␣ c r'],
@@ -372,7 +373,7 @@ const S = [
       ['Comentar el bloque del cursor sin seleccionar', 'gcip', '', 'gc + objeto: gcap, gc5j, gcG…'],
       ['Añadir comentario debajo / encima', 'gco ‖ gcO'],
       ['Indentar / desindentar', '>> ‖ <<', 'Tab / Shift+Tab', 'en Visual, > y < mantienen la selección para repetir'],
-      ['Seleccionar caracteres / líneas / bloque', 'v ‖ V ‖ Ctrl+v'],
+      ['Seleccionar caracteres / líneas / bloque', 'v ‖ V ‖ Ctrl+v ‖ Ctrl+q', '', 'Ctrl+q hace lo mismo que Ctrl+v: úsalo si tu terminal pega con Ctrl+v'],
       ['Seleccionar todo', 'ggVG', 'Ctrl+A'],
       ['Copiar línea / pegar debajo / pegar encima', 'yy ‖ p ‖ P'],
       ['Copiar / cortar la selección', 'y ‖ d', 'Ctrl+C / Ctrl+X', 'en modo Visual'],
@@ -389,11 +390,11 @@ const S = [
     ] },
 
   { id: 'multilinea', nav: 'Multilínea', title: 'Edición multilínea',
-    lead: 'LazyVim no trae multicursor. Estas tres técnicas cubren lo que hacías con Alt+clic y Ctrl+D. Si después de unos días sigues echando de menos ver los cursores, tienes la sección siguiente.',
+    lead: 'LazyVim no trae multicursor. Estas tres técnicas cubren lo que hacías con Alt+clic y Ctrl+D. Si después de unos días sigues echando de menos ver los cursores, tienes la sección siguiente. Si Ctrl+v te pega el portapapeles, es tu terminal (Warp, la de VS Code…) quedándose la tecla: usa Ctrl+q, que en Vim hace lo mismo.',
     visual: 'multi',
     rows: [
-      ['Escribir al inicio de varias líneas', 'Ctrl+v j j I «texto» Esc', 'Alt+clic', 'el texto aparece en todas al pulsar Esc'],
-      ['Escribir al final de varias líneas', 'Ctrl+v j j $ A «texto» Esc'],
+      ['Escribir al inicio de varias líneas', 'Ctrl+v j j I «texto» Esc', 'Alt+clic', 'el texto aparece en todas al pulsar Esc. Ctrl+q sirve igual que Ctrl+v'],
+      ['Escribir al final de varias líneas', 'Ctrl+v j j $ A «texto» Esc', '', 'Ctrl+q sirve igual que Ctrl+v'],
       ['Cambiar la palabra y repetir en la siguiente', '* cgn «nuevo» Esc . .', 'Ctrl+D', 'cada . cambia la siguiente coincidencia; n la salta'],
       ['Aplicar teclas a cada línea seleccionada', ":'<,'>norm A;", '', 'aquí añade ; al final de cada línea'],
       ['Renombrar un símbolo en todo el proyecto', '␣ c r', 'F2'],
@@ -503,6 +504,10 @@ const S = [
       ['¿No recuerdas un atajo?', '␣ ‖ ␣ s k', '', 'espera el menú o busca por lo que quieres hacer'],
       ['¿No sabes salir?', 'Esc :qa!', '', 'sale de todo sin guardar'],
       ['¿El resaltado de búsqueda no se va?', 'Esc'],
+      ['¿Sale «E492: Not an editor command»?', 'Esc', '', 'escribiste un atajo después de :. Los atajos se pulsan en modo Normal sin :; solo los comandos como :w llevan : y Enter'],
+      ['¿Space q q no sale de Neovim?', 'y ‖ n', '', 'hay cambios sin guardar y te pregunta abajo: y guarda y sale, n sale sin guardar'],
+      ['¿El explorador se ha quedado a pantalla completa?', '␣ b d', '', 'cerraste el archivo con :q, que cierra la ventana. Cierra los archivos con Space b d y el explorador se queda en su sitio'],
+      ['¿Ctrl+v pega en vez de seleccionar en bloque?', 'Ctrl+q', '', 'tu terminal usa Ctrl+v para pegar y Neovim no recibe la tecla. Ctrl+q hace lo mismo; o quita Ctrl+V del atajo de pegar en tu terminal y deja Ctrl+Shift+V'],
     ] },
 ];
 
@@ -547,7 +552,7 @@ const visuals = {
   modes: () => `<div class="modes">${[
     ['--normal', 'NORMAL', 'Moverte y dar órdenes. Es donde pasas la mayor parte del tiempo.', 'Esc desde cualquier modo'],
     ['--insert', 'INSERT', 'Escribir texto, como en cualquier editor.', 'i ‖ a ‖ o'],
-    ['--visual', 'VISUAL', 'Seleccionar para copiar, borrar, comentar o mover.', 'v ‖ V ‖ Ctrl+v'],
+    ['--visual', 'VISUAL', 'Seleccionar para copiar, borrar, comentar o mover.', 'v ‖ V ‖ Ctrl+v ‖ Ctrl+q'],
     ['--command', 'COMMAND', 'Escribir comandos como :w o :%s/a/b/g.', ':'],
   ].map(([c, n, p, k]) => `<div class="mode-card" style="--c:var(${c})"><span class="pill">${n}</span><p>${p}</p>
     <div class="go">${c === '--normal' ? 'Vuelves con ' + keys('Esc') : 'Entras desde Normal con ' + keys(k)}</div></div>`).join('')}</div>`,
