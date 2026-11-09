@@ -45,11 +45,16 @@ def read_meta(path):
 def entry(path):
     title, desc = read_meta(path)
     desc_html = f"<p>{escape(desc)}</p>" if desc else ""
+    # Guides that never report progress (no atlasProgress call) get no scale bar.
+    progress = (
+        '<div class="guide-progress"><div class="scale" aria-hidden="true"></div>'
+        '<p class="status">Sin empezar</p></div>'
+        if "atlasProgress" in path.read_text(encoding="utf-8", errors="replace") else ""
+    )
     return (
         f'<li><a class="guide" href="atlas/{escape(path.name)}" data-guide="{escape(path.stem)}">'
         f'<div class="guide-text"><h2>{escape(title)}</h2>{desc_html}</div>'
-        f'<div class="guide-progress"><div class="scale" aria-hidden="true"></div>'
-        f'<p class="status">Sin empezar</p></div></a></li>'
+        f'{progress}</a></li>'
     )
 
 
@@ -130,6 +135,7 @@ a { color: inherit; }
 .guide:hover { border-color: var(--accent); }
 .guide:hover h2 { color: var(--accent); }
 .guide h2 { margin: 0 0 6px; font: 700 clamp(1.3rem, 3vw, 1.6rem)/1.15 var(--f-display); letter-spacing: -.01em; text-wrap: balance; }
+.guide-text:only-child { grid-column: 1 / -1; }
 .guide-text p { margin: 0; color: var(--muted); font-size: .95rem; max-width: 60ch; }
 @media (max-width: 720px) { .guide { grid-template-columns: minmax(0, 1fr); padding: 20px; } }
 
