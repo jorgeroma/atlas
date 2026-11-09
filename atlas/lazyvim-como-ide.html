@@ -1,0 +1,568 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>LazyVim como IDE</title>
+<script src="../atlas.js"></script>
+<meta name="description" content="Chuleta visual para usar LazyVim (configuración por defecto) como editor principal: buscar archivos, pestañas, explorador, edición multilínea, mover y comentar líneas, buscar y reemplazar en el proyecto, LSP y git, con su equivalente en VS Code.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Palette follows tokyonight (LazyVim's default colorscheme): day in light, night in dark.
+   Mode colors match lualine: normal = blue, insert = green, visual = purple, command = orange. */
+:root {
+  --bg: #e4e5eb; --surface: #f6f6f9; --sunk: #d9dbe4; --ink: #1f2335; --ink-2: #4c5170; --ink-3: #7479a0;
+  --line: #c6c9d8; --accent: #2e7de9; --accent-soft: #d6e4fa;
+  --normal: #2e7de9; --insert: #4f7a28; --visual: #8a4ae8; --command: #b15c00; --red: #c4314b;
+  --f-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #16161e; --surface: #1a1b26; --sunk: #232433; --ink: #c0caf5; --ink-2: #a9b1d6; --ink-3: #737aa2;
+  --line: #2c3047; --accent: #7aa2f7; --accent-soft: #23304f;
+  --normal: #7aa2f7; --insert: #9ece6a; --visual: #bb9af7; --command: #ff9e64; --red: #f7768e;
+  color-scheme: dark;
+} }
+:root[data-theme="dark"] {
+  --bg: #16161e; --surface: #1a1b26; --sunk: #232433; --ink: #c0caf5; --ink-2: #a9b1d6; --ink-3: #737aa2;
+  --line: #2c3047; --accent: #7aa2f7; --accent-soft: #23304f;
+  --normal: #7aa2f7; --insert: #9ece6a; --visual: #bb9af7; --command: #ff9e64; --red: #f7768e;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { scroll-padding-top: 130px; scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.6 var(--f-body); -webkit-font-smoothing: antialiased; }
+a { color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+h1, h2, h3 { font-family: var(--f-display); line-height: 1.15; margin: 0; text-wrap: balance; }
+code { font-family: var(--f-mono); font-size: .86em; background: var(--sunk); padding: .08em .35em; border-radius: 4px; }
+.wrap { max-width: 1080px; margin: 0 auto; padding-inline: max(16px, env(safe-area-inset-left, 0px)) max(16px, env(safe-area-inset-right, 0px)); }
+
+/* Keycaps */
+kbd { font: 600 .8rem/1 var(--f-mono); display: inline-block; padding: .38em .55em .32em; min-width: 1.9em; text-align: center;
+  background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-bottom-width: 3px; border-radius: 6px; white-space: nowrap; }
+kbd.lead { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+.keys { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.keys i { font-style: normal; color: var(--ink-3); font-size: .75rem; }
+.keys .or { color: var(--ink-3); font-size: .78rem; margin-inline: 4px; }
+.keys .ph { font-family: var(--f-mono); font-size: .8rem; color: var(--ink-3); }
+.keys .cmd { font-size: .8rem; color: var(--command); background: var(--sunk); border: 1px dashed var(--line); padding: .3em .5em; }
+.keys.muted kbd { color: var(--ink-3); border-bottom-width: 1px; background: transparent; }
+
+/* Header */
+header { position: sticky; top: 0; z-index: 5; background: var(--surface); border-bottom: 1px solid var(--line); padding-top: env(safe-area-inset-top, 0px); }
+.bar { display: flex; align-items: center; gap: 12px; padding-block: 10px; }
+.brand { font: 800 1.05rem var(--f-display); white-space: nowrap; display: flex; align-items: center; gap: 8px; }
+.brand b { font: 600 .78rem var(--f-mono); color: var(--surface); background: var(--normal); padding: .2em .5em; border-radius: 4px; }
+.search { flex: 1; min-width: 0; font: inherit; font-size: .95rem; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); }
+.search:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: transparent; }
+nav { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding-bottom: 10px; }
+nav a { flex: none; font-size: .85rem; text-decoration: none; color: var(--ink-2); padding: 4px 10px; border-radius: 99px; border: 1px solid var(--line); }
+nav a:hover { color: var(--accent); border-color: var(--accent); }
+
+/* Hero */
+.hero { padding-block: 36px 20px; display: grid; gap: 18px; }
+.hero h1 { font-size: clamp(2rem, 5.5vw, 3.4rem); font-weight: 800; letter-spacing: -.02em; }
+.hero p { margin: 0; max-width: 64ch; color: var(--ink-2); }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: .88rem; color: var(--ink-2); align-items: center; }
+.legend span { display: inline-flex; gap: 6px; align-items: center; }
+
+/* Mock LazyVim screen: always tokyonight night, like a screenshot */
+.mock { --m-bg: #1a1b26; --m-side: #16161e; --m-fg: #c0caf5; --m-dim: #565f89; --m-line: #292e42;
+  font: 12.5px/1.65 var(--f-mono); color: var(--m-fg); background: var(--m-bg); border-radius: 12px; overflow: hidden;
+  display: grid; grid-template-columns: minmax(118px, 28%) 1fr; grid-template-rows: auto 1fr auto; border: 1px solid #2c3047;
+  box-shadow: 0 18px 50px rgb(10 12 30 / .28); }
+.mock > * { position: relative; }
+.m-side-head, .m-tabs { background: var(--m-side); border-bottom: 1px solid var(--m-line); padding: 6px 10px; white-space: nowrap; overflow: hidden; }
+.m-side-head { color: var(--m-dim); border-right: 1px solid var(--m-line); }
+.m-tabs span { padding: 6px 10px; color: var(--m-dim); }
+.m-tabs .on { color: var(--m-fg); background: var(--m-bg); border-top: 2px solid #7aa2f7; }
+.m-tree { background: var(--m-side); border-right: 1px solid var(--m-line); padding: 8px 10px 52px; white-space: pre; min-height: 230px; }
+.m-tree .d { color: #7aa2f7; } .m-tree .h { color: var(--m-dim); } .m-tree .cur { background: #283457; }
+.m-code { padding: 8px 10px 52px; white-space: pre; }
+@media (max-width: 640px) { .m-picker { display: none; } }
+.m-code .n { color: #3b4261; display: inline-block; width: 2.2em; text-align: right; margin-right: 1em; }
+.m-code .n.c { color: #ff9e64; }
+.kw { color: #bb9af7; } .fn { color: #7aa2f7; } .st { color: #9ece6a; } .cm { color: var(--m-dim); font-style: italic; } .nu { color: #ff9e64; }
+.m-status { grid-column: 1 / -1; display: flex; align-items: center; background: #1f2335; white-space: nowrap; overflow: hidden; }
+.m-status .mode { background: #7aa2f7; color: #1a1b26; font-weight: 600; padding: 3px 12px; }
+.m-status span { padding: 3px 10px; color: var(--m-dim); }
+.m-status .gap { flex: 1; }
+.m-picker { position: absolute; right: 10px; top: 10px; width: min(250px, 78%); background: #16161e; border: 1px solid #7aa2f7; border-radius: 6px; padding: 4px 0; white-space: pre; }
+.m-picker div { padding: 0 8px; } .m-picker .q { color: #7aa2f7; border-bottom: 1px solid var(--m-line); padding-bottom: 4px; margin-bottom: 4px; }
+.m-picker .sel { background: #283457; } .m-picker em { color: #ff9e64; font-style: normal; }
+.tag { position: absolute; display: inline-flex; align-items: center; gap: 6px; font: 600 11.5px var(--f-body); color: #1a1b26; background: #e0af68;
+  padding: 4px 8px; border-radius: 6px; text-decoration: none; white-space: nowrap; box-shadow: 0 2px 8px rgb(0 0 0 / .35); z-index: 1; }
+.tag:hover { background: #ffc777; }
+.tag kbd { font-size: .7rem; padding: .2em .4em; background: #1a1b26; color: #e0af68; border-color: #1a1b26; min-width: 0; }
+
+/* Sections */
+main { padding-bottom: 80px; }
+section { padding-top: 40px; }
+section h2 { font-size: clamp(1.45rem, 3vw, 1.9rem); font-weight: 800; letter-spacing: -.01em; }
+.lead { margin: 6px 0 18px; color: var(--ink-2); max-width: 70ch; }
+.rows { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.row { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(110px, 150px); gap: 6px 18px; align-items: center; padding: 10px 16px; border-top: 1px solid var(--line); }
+.row:first-child { border-top: 0; }
+.row .act small { display: block; color: var(--ink-3); font-size: .84rem; line-height: 1.45; margin-top: 2px; }
+.row .vs { font-size: .78rem; color: var(--ink-3); text-align: right; }
+.row .vs:not(:empty)::before { content: "VS Code  "; opacity: .7; }
+.sub { padding: 9px 16px 7px; font: 700 .9rem var(--f-display); color: var(--ink-2); background: var(--sunk); border-top: 1px solid var(--line); }
+.sub:first-child { border-top: 0; }
+@media (max-width: 640px) {
+  .row { grid-template-columns: 1fr; }
+  .row .vs { text-align: left; }
+}
+
+/* VS Code map */
+.map { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
+.map div { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; display: grid; gap: 6px; }
+.map .arrow { color: var(--ink-3); font-size: .8rem; }
+.map small { color: var(--ink-2); font-size: .85rem; }
+
+/* Visual blocks */
+.visual { margin-bottom: 16px; }
+.modes { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+.mode-card { background: var(--surface); border: 1px solid var(--line); border-left: 5px solid var(--c); border-radius: 10px; padding: 12px 14px; display: grid; gap: 8px; align-content: start; }
+.mode-card .pill { justify-self: start; font: 600 .78rem var(--f-mono); background: var(--c); color: var(--surface); padding: .2em .6em; border-radius: 4px; }
+.mode-card p { margin: 0; font-size: .9rem; color: var(--ink-2); }
+.mode-card .go { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: .82rem; color: var(--ink-3); }
+
+.grammar { display: flex; flex-wrap: wrap; gap: 10px; align-items: stretch; }
+.grammar .g { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; display: grid; gap: 4px; min-width: 150px; flex: 1; }
+.grammar .g b { font: 700 1.3rem var(--f-mono); color: var(--c); }
+.grammar .g span { font-size: .85rem; color: var(--ink-2); }
+.grammar .plus { align-self: center; color: var(--ink-3); font-size: 1.4rem; }
+
+.steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
+.step { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: grid; gap: 8px; align-content: start; }
+.step h3 { font-size: 1rem; }
+.step ol { margin: 0; padding-left: 1.2em; font-size: .9rem; color: var(--ink-2); display: grid; gap: 4px; }
+.ba { display: grid; grid-template-columns: 1fr auto 1fr; gap: 6px; align-items: center; font: 12px/1.55 var(--f-mono); }
+.ba pre { margin: 0; background: var(--sunk); border-radius: 6px; padding: 6px 8px; overflow-x: auto; }
+.ba > span { color: var(--ink-3); }
+.ba mark { background: var(--accent-soft); color: var(--accent); }
+
+.explorer { display: grid; grid-template-columns: minmax(0, 260px) 1fr; gap: 14px; align-items: start; }
+.tree { font: 13px/1.8 var(--f-mono); background: #16161e; color: #c0caf5; border-radius: 10px; padding: 10px 0; white-space: pre; overflow: hidden; }
+.tree div { padding-inline: 14px; } .tree .d { color: #7aa2f7; } .tree .h { color: #565f89; } .tree .sel::before { content: "▍"; color: #e0af68; margin-left: -10px; }
+.tree .cur { background: #283457; }
+.ekeys { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.ekeys div { display: flex; gap: 10px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; font-size: .88rem; }
+@media (max-width: 640px) { .explorer { grid-template-columns: 1fr; } }
+
+.anatomy { display: flex; flex-wrap: wrap; gap: 2px; font-family: var(--f-mono); }
+.anatomy div { display: grid; gap: 6px; justify-items: center; text-align: center; }
+.anatomy b { font-size: clamp(1.2rem, 3.5vw, 1.8rem); padding: 4px 8px; border-radius: 6px; background: var(--surface); border: 1px solid var(--line); color: var(--c, var(--ink)); }
+.anatomy span { font: .78rem/1.3 var(--f-body); color: var(--ink-2); max-width: 11ch; }
+
+.empty { padding: 40px 0; color: var(--ink-2); }
+.filtering .visual { display: none; }
+footer { color: var(--ink-3); font-size: .85rem; padding-block: 24px 40px; border-top: 1px solid var(--line); }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap bar">
+    <div class="brand"><b>NORMAL</b>LazyVim</div>
+    <input class="search" id="q" type="search" placeholder="Filtrar atajos: reemplazar, ocultos, Ctrl+P…" aria-label="Filtrar atajos" autocomplete="off">
+    <span data-atlas-theme></span>
+  </div>
+  <nav class="wrap" id="nav" aria-label="Secciones"></nav>
+</header>
+
+<main class="wrap">
+  <div class="hero">
+    <h1>LazyVim como tu editor principal</h1>
+    <p>Todo lo que haces en VS Code, con la configuración que trae LazyVim de serie. Pulsa una etiqueta de la pantalla para ir a su sección, o filtra arriba por lo que quieres hacer.</p>
+
+    <div class="mock" aria-label="Pantalla de LazyVim con los atajos de cada zona">
+      <div class="m-side-head">Explorer</div>
+      <div class="m-tabs"><span class="on">main.py ●</span><span>utils.py</span><span>README.md</span>
+        <a class="tag" href="#pestanas" style="right:8px;top:4px"><kbd>Shift+h</kbd><kbd>Shift+l</kbd> pestañas</a></div>
+      <div class="m-tree"><span class="d">▾ src</span>
+  <span class="cur">main.py</span>
+  utils.py
+<span class="d">▸ tests</span>
+<span class="h">.env</span>
+<span class="h">.gitignore</span>
+README.md
+        <a class="tag" href="#explorador" style="left:8px;bottom:10px"><kbd>Space</kbd><kbd>e</kbd> explorador</a></div>
+      <div class="m-code"><span class="n">2</span><span class="kw">from</span> utils <span class="kw">import</span> load
+<span class="n">1</span>
+<span class="n c">3</span><span class="kw">def</span> <span class="fn">total</span>(items):
+<span class="n">1</span>    <span class="cm"># suma los precios</span>
+<span class="n">2</span>    <span class="kw">return</span> <span class="fn">sum</span>(i.price <span class="kw">for</span> i <span class="kw">in</span> items)
+<span class="n">3</span>
+<span class="n">4</span><span class="fn">print</span>(<span class="fn">total</span>(<span class="fn">load</span>(<span class="st">"data.json"</span>)))
+        <div class="m-picker" aria-hidden="true"><div class="q">Files › <em>ut</em>|</div><div class="sel">src/<em>ut</em>ils.py</div><div>tests/test_<em>ut</em>ils.py</div></div>
+        <a class="tag" href="#archivos" style="right:10px;bottom:30px"><kbd>Space</kbd><kbd>Space</kbd> buscar archivo</a>
+        <a class="tag" href="#buscar" style="left:10px;bottom:6px"><kbd>Space</kbd><kbd>/</kbd> buscar en el proyecto</a></div>
+      <div class="m-status"><span class="mode">NORMAL</span><span> main</span><span>main.py</span><span class="gap"></span><span>3:5</span>
+        <a class="tag" href="#terminal" style="position:static;margin:3px 6px"><kbd>Ctrl+/</kbd> terminal</a></div>
+    </div>
+
+    <div class="legend">
+      <span><kbd class="lead">Space</kbd> tecla líder: púlsala y espera para ver el menú</span>
+      <span><kbd>gcc</kbd> teclas que se pulsan seguidas</span>
+      <span><span class="keys"><kbd>Ctrl</kbd><i>+</i><kbd>s</kbd></span> a la vez</span>
+      <span><span class="keys"><span class="cmd" style="font-family:var(--f-mono)">:w</span></span> comando: escríbelo y pulsa Enter</span>
+    </div>
+  </div>
+
+  <div id="sections"></div>
+  <p class="empty" id="empty" hidden></p>
+</main>
+
+<footer class="wrap">Basado en los atajos por defecto de LazyVim (picker y explorador de Snacks, bufferline, grug-far, flash, blink.cmp). Si algo no coincide en tu instalación, <code>Space s k</code> busca cualquier atajo por nombre.</footer>
+
+<script>
+// Key notation: tokens separated by spaces are pressed in sequence; "+" joins a chord;
+// "‖" separates alternatives; an alternative starting with ":" "/" or "?" + text is a typed command;
+// "«x»" is text you type; "␣" is the leader (Space).
+const S = [
+  { id: 'esencial', nav: 'Lo esencial', title: 'Lo esencial',
+    lead: 'Vim funciona por modos. En Normal cada tecla es una orden; en Insert escribes texto. La barra inferior muestra el modo con su color.',
+    visual: 'modes',
+    rows: [
+      ['Empezar a escribir antes / después del cursor', 'i ‖ a'],
+      ['Nueva línea debajo / encima y escribir', 'o ‖ O'],
+      ['Volver a modo Normal', 'Esc'],
+      ['Guardar', 'Ctrl+s ‖ :w', 'Ctrl+S', 'Ctrl+s funciona en cualquier modo'],
+      ['Cerrar la ventana / salir de todo', ':q ‖ ␣ q q'],
+      ['Salir sin guardar', ':qa!'],
+      ['Deshacer / rehacer', 'u ‖ Ctrl+r', 'Ctrl+Z / Ctrl+Y'],
+      ['Repetir el último cambio', '.'],
+      ['Ver todo lo que cuelga de la tecla líder', '␣', '', 'espera medio segundo: which-key muestra el menú y sus submenús'],
+      ['Buscar un atajo por lo que hace', '␣ s k', 'Ctrl+K Ctrl+S'],
+      ['Paleta de comandos', '␣ s C', 'Ctrl+Shift+P'],
+      ['Tutorial interactivo de Vim (30 min)', ':Tutor'],
+    ] },
+
+  { id: 'vscode', nav: 'Desde VS Code', title: 'De VS Code a LazyVim', kind: 'map',
+    lead: 'Los atajos que ya tienes en los dedos y su equivalente. Cada uno se explica en su sección.',
+    rows: [
+      ['Buscar archivo', 'Ctrl+P', '␣ ␣'],
+      ['Buscar en el proyecto', 'Ctrl+Shift+F', '␣ /'],
+      ['Reemplazar en el proyecto', 'Ctrl+Shift+H', '␣ s r'],
+      ['Buscar en el archivo', 'Ctrl+F', '/«texto»'],
+      ['Reemplazar en el archivo', 'Ctrl+H', ':%s/viejo/nuevo/g'],
+      ['Explorador', 'Ctrl+Shift+E', '␣ e'],
+      ['Pestaña siguiente / anterior', 'Ctrl+PgDn', 'Shift+l ‖ Shift+h'],
+      ['Última pestaña usada', 'Ctrl+Tab', '␣ b b'],
+      ['Cerrar pestaña', 'Ctrl+W', '␣ b d'],
+      ['Dividir editor', 'Ctrl+\\', '␣ |'],
+      ['Comentar línea', 'Ctrl+/', 'gcc'],
+      ['Mover línea', 'Alt+↑', 'Alt+k ‖ Alt+j'],
+      ['Siguiente coincidencia', 'Ctrl+D', '* cgn'],
+      ['Varios cursores en columna', 'Alt+clic', 'Ctrl+v'],
+      ['Ir a la definición', 'F12', 'gd'],
+      ['Ver referencias', 'Shift+F12', 'gr'],
+      ['Renombrar símbolo', 'F2', '␣ c r'],
+      ['Arreglo rápido', 'Ctrl+.', '␣ c a'],
+      ['Formatear', 'Shift+Alt+F', '␣ c f'],
+      ['Símbolos del archivo', 'Ctrl+Shift+O', '␣ s s'],
+      ['Ir a línea', 'Ctrl+G', ':42'],
+      ['Terminal', 'Ctrl+`', 'Ctrl+/'],
+      ['Panel de problemas', 'Ctrl+Shift+M', '␣ x x'],
+      ['Git', 'Ctrl+Shift+G', '␣ g g'],
+    ] },
+
+  { id: 'moverse', nav: 'Moverse', title: 'Moverse sin ratón',
+    lead: 'Los números de línea son relativos al cursor: si quieres bajar a la línea que pone 5, pulsa 5j. Cualquier movimiento acepta un número delante.',
+    rows: [
+      ['Izquierda / abajo / arriba / derecha', 'h ‖ j ‖ k ‖ l'],
+      ['Palabra siguiente / anterior / final de palabra', 'w ‖ b ‖ e', 'Ctrl+→ / Ctrl+←'],
+      ['Inicio de línea / primer carácter / final', '0 ‖ ^ ‖ $', 'Home / End'],
+      ['Principio / final del archivo', 'gg ‖ G', 'Ctrl+Home / Ctrl+End'],
+      ['Ir a la línea 42', ':42 ‖ 42G', 'Ctrl+G'],
+      ['Párrafo anterior / siguiente', '{ ‖ }'],
+      ['Media página abajo / arriba', 'Ctrl+d ‖ Ctrl+u', 'PgDn / PgUp'],
+      ['Saltar al paréntesis o llave pareja', '%', 'Ctrl+Shift+\\'],
+      ['Saltar a cualquier sitio visible', 's', '', 'flash: escribe dos letras del destino y pulsa la etiqueta que aparece'],
+      ['Volver / avanzar entre saltos', 'Ctrl+o ‖ Ctrl+i', 'Alt+← / Alt+→'],
+      ['Centrar la pantalla en el cursor', 'zz'],
+    ] },
+
+  { id: 'archivos', nav: 'Buscar archivos', title: 'Buscar archivos',
+    lead: 'El picker busca por coincidencia difusa: escribe trozos del nombre, como «usrctl» para user_controller.py. Por defecto oculta los archivos ocultos y los ignorados por git.',
+    rows: [
+      ['Buscar archivo en el proyecto', '␣ ␣ ‖ ␣ f f', 'Ctrl+P'],
+      ['Archivos recientes', '␣ f r'],
+      ['Pestañas (buffers) abiertas', '␣ , ‖ ␣ f b'],
+      ['Archivos versionados en git', '␣ f g'],
+      ['Archivos de configuración de LazyVim', '␣ f c'],
+      ['Archivo nuevo', '␣ f n', 'Ctrl+N', 'se crea al guardar con :w nombre.ext'],
+      ['Abrir la ruta bajo el cursor', 'gf'],
+      'Dentro del picker',
+      ['Moverte por los resultados', 'Ctrl+j ‖ Ctrl+k ‖ ↑ ‖ ↓'],
+      ['Abrir', 'Enter'],
+      ['Abrir en split vertical / horizontal / tab', 'Ctrl+v ‖ Ctrl+s ‖ Ctrl+t'],
+      ['Mostrar archivos ocultos (.env, .github…)', 'Alt+h'],
+      ['Mostrar archivos ignorados por git', 'Alt+i'],
+      ['Marcar varios resultados', 'Tab'],
+      ['Mandar los resultados a la lista quickfix', 'Ctrl+q'],
+      ['Mostrar / ocultar la vista previa', 'Alt+p'],
+      ['Cerrar', 'Esc'],
+      ['Reabrir el último picker como lo dejaste', '␣ s R'],
+    ] },
+
+  { id: 'explorador', nav: 'Explorador', title: 'Crear, mover, copiar y borrar',
+    lead: 'El explorador lateral actúa sobre el archivo bajo el cursor, o sobre todos los marcados con Tab.',
+    visual: 'explorer',
+    rows: [
+      ['Abrir / cerrar el explorador (raíz del proyecto)', '␣ e', 'Ctrl+Shift+E'],
+      ['Explorador en el directorio de trabajo', '␣ E'],
+      ['Abrir archivo / desplegar carpeta', 'l ‖ Enter'],
+      ['Plegar carpeta', 'h'],
+      ['Subir a la carpeta padre', 'Backspace'],
+      ['Crear archivo', 'a', '', 'termina el nombre en / para crear una carpeta'],
+      ['Renombrar', 'r', 'F2'],
+      ['Borrar', 'd', 'Supr', 'pide confirmación'],
+      ['Marcar / desmarcar', 'Tab'],
+      ['Mover los marcados a la carpeta del cursor', 'm'],
+      ['Copiar los marcados a la carpeta del cursor', 'c', '', 'sin nada marcado, duplica el archivo con otro nombre'],
+      ['Copiar / pegar archivos', 'y ‖ p'],
+      ['Mostrar / ocultar archivos ocultos', 'H'],
+      ['Mostrar / ocultar ignorados por git', 'I'],
+      ['Plegar todas las carpetas', 'Z'],
+      ['Abrir con la aplicación del sistema', 'o'],
+      ['Buscar texto dentro de la carpeta', '␣ /'],
+      ['Ver todas las teclas del explorador', '?'],
+    ] },
+
+  { id: 'pestanas', nav: 'Pestañas y ventanas', title: 'Pestañas y ventanas',
+    lead: 'Lo que en VS Code son pestañas aquí son buffers: la barra de arriba. Los splits son ventanas. Las tabs de Vim son escritorios completos y casi nunca las necesitas.',
+    rows: [
+      ['Pestaña anterior / siguiente', 'Shift+h ‖ Shift+l', 'Ctrl+PgUp / PgDn'],
+      ['Alternar con la última pestaña usada', '␣ b b', 'Ctrl+Tab'],
+      ['Elegir entre las pestañas abiertas', '␣ ,'],
+      ['Cerrar pestaña', '␣ b d', 'Ctrl+W'],
+      ['Cerrar todas las demás', '␣ b o'],
+      ['Cerrar las de la izquierda / derecha', '␣ b l ‖ ␣ b r'],
+      ['Fijar pestaña (no se cierra con las demás)', '␣ b p'],
+      ['Mover pestaña a la izquierda / derecha', '[B ‖ ]B'],
+      'Ventanas (splits)',
+      ['Dividir a la derecha / abajo', '␣ | ‖ ␣ -', 'Ctrl+\\'],
+      ['Pasar a la ventana de la izquierda / abajo / arriba / derecha', 'Ctrl+h ‖ Ctrl+j ‖ Ctrl+k ‖ Ctrl+l'],
+      ['Cerrar ventana', '␣ w d'],
+      ['Maximizar / restaurar ventana', '␣ w m'],
+      ['Cambiar el tamaño', 'Ctrl+↑ ‖ Ctrl+↓ ‖ Ctrl+← ‖ Ctrl+→'],
+      'Tabs de Vim',
+      ['Nueva tab / cerrar tab', '␣ Tab Tab ‖ ␣ Tab d'],
+      ['Tab siguiente / anterior', '␣ Tab ] ‖ ␣ Tab ['],
+    ] },
+
+  { id: 'editar', nav: 'Editar', title: 'Editar',
+    lead: 'Se edita combinando un verbo con un movimiento o un objeto. Copiar y pegar usan el portapapeles del sistema.',
+    visual: 'grammar',
+    rows: [
+      ['Mover línea o selección arriba / abajo', 'Alt+k ‖ Alt+j', 'Alt+↑ / Alt+↓', 'funciona en Normal, Insert y Visual'],
+      ['Comentar / descomentar línea', 'gcc', 'Ctrl+/'],
+      ['Comentar / descomentar selección', 'gc', 'Ctrl+/', 'en modo Visual'],
+      ['Comentar el bloque del cursor sin seleccionar', 'gcip', '', 'gc + objeto: gcap, gc5j, gcG…'],
+      ['Añadir comentario debajo / encima', 'gco ‖ gcO'],
+      ['Indentar / desindentar', '>> ‖ <<', 'Tab / Shift+Tab', 'en Visual, > y < mantienen la selección para repetir'],
+      ['Seleccionar caracteres / líneas / bloque', 'v ‖ V ‖ Ctrl+v'],
+      ['Seleccionar todo', 'ggVG', 'Ctrl+A'],
+      ['Copiar línea / pegar debajo / pegar encima', 'yy ‖ p ‖ P'],
+      ['Copiar / cortar la selección', 'y ‖ d', 'Ctrl+C / Ctrl+X', 'en modo Visual'],
+      ['Duplicar línea', 'yyp', 'Shift+Alt+↓'],
+      ['Borrar línea', 'dd', 'Ctrl+Shift+K'],
+      ['Borrar hasta el final de la línea', 'D'],
+      ['Cambiar la palabra entera', 'ciw'],
+      ['Cambiar lo que hay entre comillas / paréntesis', 'ci" ‖ ci('],
+      ['Seleccionar función / clase', 'vaf ‖ vac', '', 'daf borra la función, vif selecciona solo su cuerpo'],
+      ['Seleccionar el nodo de sintaxis', 'S', '', 'flash: pulsa la etiqueta del bloque que quieres'],
+      ['Unir con la línea siguiente', 'J'],
+      ['A mayúsculas / minúsculas', 'U ‖ u', '', 'en modo Visual'],
+      ['Formatear el archivo', '␣ c f', 'Shift+Alt+F'],
+    ] },
+
+  { id: 'multilinea', nav: 'Multilínea', title: 'Edición multilínea',
+    lead: 'LazyVim no trae multicursor. Estas tres técnicas cubren lo que hacías con Alt+clic y Ctrl+D.',
+    visual: 'multi',
+    rows: [
+      ['Escribir al inicio de varias líneas', 'Ctrl+v j j I «texto» Esc', 'Alt+clic', 'el texto aparece en todas al pulsar Esc'],
+      ['Escribir al final de varias líneas', 'Ctrl+v j j $ A «texto» Esc'],
+      ['Cambiar la palabra y repetir en la siguiente', '* cgn «nuevo» Esc . .', 'Ctrl+D', 'cada . cambia la siguiente coincidencia; n la salta'],
+      ['Aplicar teclas a cada línea seleccionada', ":'<,'>norm A;", '', 'aquí añade ; al final de cada línea'],
+      ['Renombrar un símbolo en todo el proyecto', '␣ c r', 'F2'],
+      ['Reemplazar todas en el archivo', ':%s/viejo/nuevo/g', 'Ctrl+Shift+L'],
+    ] },
+
+  { id: 'buscar', nav: 'Buscar y reemplazar', title: 'Buscar y reemplazar',
+    lead: 'Tres alcances: el archivo, una selección o el proyecto entero. La búsqueda en el proyecto ignora ocultos y archivos de .gitignore: Alt+h y Alt+i los incluyen.',
+    visual: 'anatomy',
+    rows: [
+      'En el archivo',
+      ['Buscar hacia delante / hacia atrás', '/«texto» ‖ ?«texto»', 'Ctrl+F'],
+      ['Resultado siguiente / anterior', 'n ‖ N', 'Enter / Shift+Enter'],
+      ['Buscar la palabra bajo el cursor', '* ‖ #'],
+      ['Quitar el resaltado', 'Esc'],
+      ['Buscar entre las líneas del archivo con vista previa', '␣ s b'],
+      ['Reemplazar en todo el archivo', ':%s/viejo/nuevo/g', 'Ctrl+H', 'ves el resultado mientras escribes'],
+      ['Reemplazar confirmando cada una', ':%s/viejo/nuevo/gc', '', 'y sí, n no, a todas, q terminar'],
+      ['Reemplazar solo en la selección', ':s/viejo/nuevo/g', '', "selecciona con V y pulsa :, Vim añade '<,'> solo"],
+      'En el proyecto',
+      ['Buscar texto en todo el proyecto', '␣ / ‖ ␣ s g', 'Ctrl+Shift+F'],
+      ['Buscar la palabra bajo el cursor o la selección', '␣ s w'],
+      ['Buscar en el directorio de trabajo', '␣ s G'],
+      ['Buscar y reemplazar en el proyecto', '␣ s r', 'Ctrl+Shift+H', 'abre grug-far: rellena Search y Replace, revisa la vista previa y aplica con \\r. El campo Files viene filtrado por la extensión del archivo actual: vacíalo para buscar en todo'],
+      ['Reemplazar en los resultados de una búsqueda', ':cdo s/viejo/nuevo/g | update', '', 'antes manda los resultados a quickfix con Ctrl+q desde el picker'],
+      ['Buscar TODO, FIXME…', '␣ s t'],
+    ] },
+
+  { id: 'codigo', nav: 'Código (LSP)', title: 'Navegar y entender código',
+    lead: 'Activa tu lenguaje en :LazyExtras (por ejemplo lang.python o lang.typescript) y LazyVim instala el LSP, el formateador y el linter.',
+    rows: [
+      ['Ir a la definición', 'gd', 'F12'],
+      ['Ver referencias', 'gr', 'Shift+F12'],
+      ['Ir a la implementación / al tipo', 'gI ‖ gy', 'Ctrl+F12'],
+      ['Documentación flotante', 'K', 'hover'],
+      ['Firma de la función', 'gK'],
+      ['Renombrar símbolo', '␣ c r', 'F2'],
+      ['Acciones de código (arreglos, imports)', '␣ c a', 'Ctrl+.'],
+      ['Formatear', '␣ c f', 'Shift+Alt+F'],
+      ['Símbolos del archivo / del proyecto', '␣ s s ‖ ␣ s S', 'Ctrl+Shift+O / Ctrl+T'],
+      ['Siguiente / anterior diagnóstico', ']d ‖ [d', 'F8'],
+      ['Siguiente / anterior error', ']e ‖ [e'],
+      ['Diagnóstico de la línea', '␣ c d'],
+      ['Panel de problemas', '␣ x x', 'Ctrl+Shift+M'],
+      ['Siguiente / anterior uso del símbolo', ']] ‖ [['],
+      ['Plegar / desplegar bloque', 'za'],
+      ['Desplegar todo / plegar todo', 'zR ‖ zM'],
+      'Autocompletado',
+      ['Abrir sugerencias', 'Ctrl+Space', 'Ctrl+Space'],
+      ['Moverte por la lista', 'Ctrl+n ‖ Ctrl+p ‖ ↑ ‖ ↓'],
+      ['Aceptar', 'Enter ‖ Ctrl+y'],
+      ['Cerrar', 'Ctrl+e'],
+      'Lenguajes',
+      ['Activar soporte de un lenguaje', ':LazyExtras', '', 'muévete con j/k y pulsa x sobre el extra'],
+      ['Ver servidores, formateadores y linters', '␣ c m', '', 'Mason'],
+    ] },
+
+  { id: 'git', nav: 'Git', title: 'Git',
+    rows: [
+      ['Interfaz completa (commit, push, ramas)', '␣ g g', 'Ctrl+Shift+G', 'necesita lazygit instalado'],
+      ['Archivos cambiados', '␣ g s'],
+      ['Cambios por bloques', '␣ g d'],
+      ['Siguiente / anterior bloque cambiado', ']h ‖ [h'],
+      ['Ver el cambio del bloque en línea', '␣ g h p'],
+      ['Añadir al stage / descartar el bloque', '␣ g h s ‖ ␣ g h r'],
+      ['Quién cambió esta línea (blame)', '␣ g b'],
+      ['Historial de commits', '␣ g l'],
+      ['Abrir el archivo en GitHub', '␣ g B'],
+    ] },
+
+  { id: 'terminal', nav: 'Terminal y extras', title: 'Terminal y extras',
+    rows: [
+      ['Abrir / ocultar la terminal', 'Ctrl+/', 'Ctrl+`'],
+      ['Terminal en la raíz / en el directorio de trabajo', '␣ f t ‖ ␣ f T'],
+      ['Pasar a modo Normal dentro de la terminal', 'Esc Esc', '', 'para hacer scroll o copiar la salida'],
+      ['Ajuste de línea on / off', '␣ u w', 'Alt+Z'],
+      ['Formatear al guardar on / off', '␣ u f'],
+      ['Números relativos on / off', '␣ u L'],
+      ['Cambiar el tema de color', '␣ u C'],
+      ['Modo zen', '␣ u z'],
+      ['Restaurar la sesión del proyecto', '␣ q s', '', 'reabre las pestañas que tenías'],
+      ['Nota rápida (scratch)', '␣ .'],
+      ['Historial de notificaciones', '␣ n'],
+      ['Gestor de plugins', '␣ l'],
+    ] },
+
+  { id: 'atasco', nav: 'Si te atascas', title: 'Si te atascas',
+    rows: [
+      ['¿Las teclas hacen cosas raras en vez de escribir?', 'Esc i', '', 'estás en Normal: Esc para asegurarte y i para escribir'],
+      ['¿Has roto algo?', 'u', '', 'deshace sin límite, incluso después de guardar'],
+      ['¿No recuerdas un atajo?', '␣ ‖ ␣ s k', '', 'espera el menú o busca por lo que quieres hacer'],
+      ['¿No sabes salir?', 'Esc :qa!', '', 'sale de todo sin guardar'],
+      ['¿El resaltado de búsqueda no se va?', 'Esc'],
+    ] },
+];
+
+const esc = s => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const cap = t => t === '␣' ? '<kbd class="lead">Space</kbd>'
+  : t.startsWith('«') ? `<span class="ph">${esc(t.slice(1, -1))}</span>`
+  : t.length > 1 && t.includes('+') ? t.split('+').map(p => `<kbd>${esc(p)}</kbd>`).join('<i>+</i>')
+  : `<kbd>${esc(t)}</kbd>`;
+const isCmd = a => a.length > 1 && /^[:/?]/.test(a);
+const keys = (str, cls = '') => `<span class="keys ${cls}">` + str.split(' ‖ ').map(a =>
+  isCmd(a) ? `<code class="cmd">${esc(a)}</code>` : a.split(' ').map(cap).join(' ')
+).join('<span class="or">o</span>') + '</span>';
+
+const visuals = {
+  modes: () => `<div class="modes">${[
+    ['--normal', 'NORMAL', 'Moverte y dar órdenes. Es donde pasas la mayor parte del tiempo.', 'Esc desde cualquier modo'],
+    ['--insert', 'INSERT', 'Escribir texto, como en cualquier editor.', 'i ‖ a ‖ o'],
+    ['--visual', 'VISUAL', 'Seleccionar para copiar, borrar, comentar o mover.', 'v ‖ V ‖ Ctrl+v'],
+    ['--command', 'COMMAND', 'Escribir comandos como :w o :%s/a/b/g.', ':'],
+  ].map(([c, n, p, k]) => `<div class="mode-card" style="--c:var(${c})"><span class="pill">${n}</span><p>${p}</p>
+    <div class="go">${c === '--normal' ? 'Vuelves con ' + keys('Esc') : 'Entras desde Normal con ' + keys(k)}</div></div>`).join('')}</div>`,
+
+  grammar: () => `<div class="grammar">
+    <div class="g" style="--c:var(--red)"><b>d c y</b><span>verbo: borrar, cambiar (borra y entra en Insert), copiar</span></div>
+    <span class="plus">+</span>
+    <div class="g" style="--c:var(--visual)"><b>i a</b><span>opcional: dentro de, o alrededor (incluye comillas, espacios…)</span></div>
+    <span class="plus">+</span>
+    <div class="g" style="--c:var(--normal)"><b>w " ( p f</b><span>qué: palabra, comillas, paréntesis, párrafo, función</span></div>
+    <span class="plus">=</span>
+    <div class="g" style="--c:var(--insert)"><b>ci"</b><span>cambia el texto entre comillas, estés donde estés de la línea</span></div></div>`,
+
+  explorer: () => `<div class="explorer"><div class="tree" aria-hidden="true"><div class="d">▾ src</div><div class="sel">  main.py</div><div class="sel">  utils.py</div><div class="d cur">▸ lib</div><div class="d">▸ tests</div><div class="h">  .env</div><div>  README.md</div></div>
+    <div class="steps">
+      <div class="step"><h3>Mover archivos a otra carpeta</h3><ol><li>${keys('Tab')} sobre cada archivo (aparece la marca amarilla)</li><li>Baja con ${keys('j')} hasta la carpeta destino</li><li>Pulsa ${keys('m')}</li></ol></div>
+      <div class="step"><h3>Copiar en lugar de mover</h3><ol><li>Marca con ${keys('Tab')}</li><li>Ve a la carpeta destino</li><li>Pulsa ${keys('c')}</li></ol></div>
+      <div class="step"><h3>Ver .env y otros ocultos</h3><ol><li>Con el explorador abierto pulsa ${keys('H')}</li><li>Para lo que ignora git, ${keys('I')}</li></ol></div>
+    </div></div>`,
+
+  multi: () => `<div class="steps">
+    <div class="step"><h3>Bloque visual: una columna de cursores</h3><div class="ba"><pre>a = 1\nb = 2\nc = 3</pre><span>→</span><pre><mark># </mark>a = 1\n<mark># </mark>b = 2\n<mark># </mark>c = 3</pre></div>${keys('Ctrl+v j j I «#» Esc')}</div>
+    <div class="step"><h3>Siguiente coincidencia, como Ctrl+D</h3><div class="ba"><pre>user.id\nuser.name\nuser.age</pre><span>→</span><pre><mark>u</mark>.id\n<mark>u</mark>.name\nuser.age</pre></div>${keys('* cgn «u» Esc .')}</div>
+    <div class="step"><h3>Comando en cada línea seleccionada</h3><div class="ba"><pre>foo()\nbar()\nbaz()</pre><span>→</span><pre>foo()<mark>;</mark>\nbar()<mark>;</mark>\nbaz()<mark>;</mark></pre></div><span class="keys">${keys('V j j')}<code class="cmd">:norm A;</code></span></div></div>`,
+
+  anatomy: () => `<div class="anatomy">${[
+    [':', 'modo comando'], ['%', 'todo el archivo', '--visual'], ['s', 'sustituir'], ['/viejo', 'qué buscar (admite regex)', '--red'],
+    ['/nuevo', 'por qué cambiarlo', '--insert'], ['/g', 'todas las de cada línea', '--normal'], ['c', 'opcional: confirmar una a una', '--command'],
+  ].map(([b, s, c]) => `<div${c ? ` style="--c:var(${c})"` : ''}><b>${esc(b)}</b><span>${s}</span></div>`).join('')}</div>`,
+};
+
+const md = s => esc(s).replace(/\\r/g, '<code>\\r</code>');
+const row = r => typeof r === 'string' ? `<div class="sub">${esc(r)}</div>`
+  : `<div class="row" data-q="${esc(norm(r.join(' ')))}"><span class="act">${esc(r[0])}${r[3] ? `<small>${md(r[3])}</small>` : ''}</span>${keys(r[1])}<span class="vs">${esc(r[2] || '')}</span></div>`;
+const norm = s => s.replace(/␣/g, 'space').normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
+
+document.getElementById('sections').innerHTML = S.map(s => `<section id="${s.id}"><h2>${s.title}</h2>${s.lead ? `<p class="lead">${esc(s.lead)}</p>` : ''}
+  ${s.visual ? `<div class="visual">${visuals[s.visual]()}</div>` : ''}
+  ${s.kind === 'map'
+    ? `<div class="map">${s.rows.map(([l, v, k]) => `<div data-q="${esc(norm(`${l} ${v} ${k}`))}">${keys(v, 'muted')}<span class="arrow">↓</span>${keys(k)}<small>${esc(l)}</small></div>`).join('')}</div>`
+    : `<div class="rows">${s.rows.map(row).join('')}</div>`}</section>`).join('');
+document.getElementById('nav').innerHTML = S.map(s => `<a href="#${s.id}">${s.nav}</a>`).join('');
+
+// Filter: hide non-matching rows, subheadings left without rows, and empty sections.
+const q = document.getElementById('q'), empty = document.getElementById('empty');
+q.addEventListener('input', () => {
+  const terms = norm(q.value.trim()).split(/\s+/).filter(Boolean);
+  document.body.classList.toggle('filtering', terms.length > 0);
+  let total = 0;
+  for (const sec of document.querySelectorAll('section')) {
+    let n = 0, sub = null, subN = 0;
+    for (const el of sec.querySelectorAll('.rows > *, .map > div')) {
+      if (el.classList.contains('sub')) { if (sub) sub.hidden = !subN && terms.length > 0; sub = el; subN = 0; continue; }
+      const hit = terms.every(t => el.dataset.q.includes(t));
+      el.hidden = !hit; if (hit) { n++; subN++; }
+    }
+    if (sub) sub.hidden = !subN && terms.length > 0;
+    sec.hidden = !n; total += n;
+  }
+  empty.hidden = total > 0;
+  empty.textContent = `Nada coincide con «${q.value}». Prueba con otra palabra, o dentro de LazyVim usa Space s k.`;
+});
+</script>
+</body>
+</html>
