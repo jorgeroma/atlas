@@ -652,6 +652,7 @@ function renderPanel(){
   const D=DAYS[day];const p=$('panel');
   const totalSets=D.items.reduce((a,b)=>a+b.sets,0);
   p.style.setProperty('--accent',`var(--${D.color})`);
+  document.documentElement.style.setProperty('--atlas-scroll',`var(--${D.color})`); // scroll bar follows the day
   p.innerHTML=`<div class="dayhead reveal"><div><span class="pill">Sesión ${day}</span><h2>${esc(D.name)}</h2><p>${esc(D.focus)}</p></div>
    <ul class="meta"><li><b>${D.items.length}</b><span class="label">Ejercicios</span></li><li><b>${totalSets}</b><span class="label">Series</span></li><li><b>45–60</b><span class="label">Minutos</span></li><li><b id="day-done">0/${totalSets}</b><span class="label">Hechas</span></li></ul></div>
    <div class="grid">${D.items.map(card).join('')}</div>

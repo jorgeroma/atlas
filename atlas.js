@@ -66,3 +66,26 @@ if (document.documentElement.hasAttribute('data-atlas-routing')) {
     slot.append(btn);
   });
 })();
+
+// Reading progress: a thin bar pinned to the bottom edge, guides only. Colour is
+// --accent; a page whose accent is neutral can set --atlas-scroll on :root instead.
+// (the landing page sits next to this file; guides live one folder down).
+(() => {
+  if (new URL('.', document.currentScript.src).pathname === new URL('.', location.href).pathname) return;
+  addEventListener('DOMContentLoaded', () => {
+    const bar = document.createElement('div');
+    bar.setAttribute('aria-hidden', 'true');
+    bar.style.cssText = 'position:fixed;left:0;right:0;bottom:0;height:4px;z-index:2147483647;pointer-events:none;background:var(--atlas-scroll,var(--accent,currentColor));transform-origin:left;transform:scaleX(0)';
+    document.body.append(bar);
+    let queued = false;
+    const update = () => {
+      queued = false;
+      const max = document.documentElement.scrollHeight - innerHeight;
+      bar.style.transform = `scaleX(${max > 0 ? Math.min(scrollY / max, 1) : 0})`;
+    };
+    const queue = () => { if (!queued) { queued = true; requestAnimationFrame(update); } };
+    addEventListener('scroll', queue, { passive: true });
+    new ResizeObserver(queue).observe(document.body); // tabs/accordions change height without scrolling
+    update();
+  });
+})();
