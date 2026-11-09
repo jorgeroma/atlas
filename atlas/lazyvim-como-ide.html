@@ -161,6 +161,10 @@ section h2 { font-size: clamp(1.45rem, 3vw, 1.9rem); font-weight: 800; letter-sp
 .anatomy b { font-size: clamp(1.2rem, 3.5vw, 1.8rem); padding: 4px 8px; border-radius: 6px; background: var(--surface); border: 1px solid var(--line); color: var(--c, var(--ink)); }
 .anatomy span { font: .78rem/1.3 var(--f-body); color: var(--ink-2); max-width: 11ch; }
 
+.codefile { background: #16161e; color: #c0caf5; border-radius: 10px; overflow: hidden; border: 1px solid #2c3047; }
+.codefile header { position: static; display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 6px 8px 6px 14px; background: #1f2335; border: 0; color: #a9b1d6; font: 12.5px var(--f-mono); }
+.codefile button { font: 600 .8rem var(--f-body); color: #1a1b26; background: #7aa2f7; border: 0; border-radius: 6px; padding: 5px 10px; cursor: pointer; }
+.codefile pre { margin: 0; padding: 12px 14px; overflow-x: auto; font: 12.5px/1.6 var(--f-mono); }
 .empty { padding: 40px 0; color: var(--ink-2); }
 .filtering .visual { display: none; }
 footer { color: var(--ink-3); font-size: .85rem; padding-block: 24px 40px; border-top: 1px solid var(--line); }
@@ -385,7 +389,7 @@ const S = [
     ] },
 
   { id: 'multilinea', nav: 'Multilínea', title: 'Edición multilínea',
-    lead: 'LazyVim no trae multicursor. Estas tres técnicas cubren lo que hacías con Alt+clic y Ctrl+D.',
+    lead: 'LazyVim no trae multicursor. Estas tres técnicas cubren lo que hacías con Alt+clic y Ctrl+D. Si después de unos días sigues echando de menos ver los cursores, tienes la sección siguiente.',
     visual: 'multi',
     rows: [
       ['Escribir al inicio de varias líneas', 'Ctrl+v j j I «texto» Esc', 'Alt+clic', 'el texto aparece en todas al pulsar Esc'],
@@ -394,6 +398,22 @@ const S = [
       ['Aplicar teclas a cada línea seleccionada', ":'<,'>norm A;", '', 'aquí añade ; al final de cada línea'],
       ['Renombrar un símbolo en todo el proyecto', '␣ c r', 'F2'],
       ['Reemplazar todas en el archivo', ':%s/viejo/nuevo/g', 'Ctrl+Shift+L'],
+    ] },
+
+  { id: 'multicursor', nav: 'Multicursor (opcional)', title: 'Multicursor con plugin (opcional)',
+    lead: 'Si quieres cursores de verdad, multicursor.nvim es el plugin recomendado. El ejemplo de su README usa Space s, Space n y Space x, que en LazyVim ya son búsqueda, notificaciones y problemas; esta configuración usa teclas libres.',
+    visual: 'mcconfig',
+    rows: [
+      ['Instalarlo', '␣ l', '', 'crea el archivo de arriba y reinicia Neovim: Lazy lo descarga solo'],
+      ['Cursor en la siguiente coincidencia', 'Ctrl+n', 'Ctrl+D', 'sobre una palabra o una selección; repítelo para añadir más'],
+      ['Saltar la siguiente coincidencia', '␣ m s', 'Ctrl+K Ctrl+D'],
+      ['Cursor en todas las coincidencias', '␣ m A', 'Ctrl+Shift+L'],
+      ['Un cursor por línea del párrafo', 'gaip', '', 'ga + movimiento: ga3j, gaG…'],
+      ['Un cursor por línea seleccionada', 'V j j ga', 'Shift+Alt+I'],
+      ['Añadir / quitar cursor con el ratón', 'Ctrl+clic', 'Alt+clic'],
+      ['Editar con todos los cursores', 'i ‖ ciw ‖ A', '', 'cualquier orden de Vim se aplica en todos a la vez'],
+      ['Quitar el cursor principal', '␣ m x'],
+      ['Volver a un solo cursor', 'Esc', 'Esc'],
     ] },
 
   { id: 'buscar', nav: 'Buscar y reemplazar', title: 'Buscar y reemplazar',
@@ -486,6 +506,33 @@ const S = [
     ] },
 ];
 
+const MC_CONFIG = `return {
+  "jake-stewart/multicursor.nvim",
+  branch = "1.0",
+  config = function()
+    local mc = require("multicursor-nvim")
+    mc.setup()
+    local set = vim.keymap.set
+
+    -- Keys chosen to avoid LazyVim defaults (<leader>s, <leader>n and <leader>x are taken).
+    set({ "n", "x" }, "<C-n>", function() mc.matchAddCursor(1) end, { desc = "Cursor at next match" })
+    set({ "n", "x" }, "<leader>ms", function() mc.matchSkipCursor(1) end, { desc = "Skip next match" })
+    set({ "n", "x" }, "<leader>mA", mc.matchAllAddCursors, { desc = "Cursors at all matches" })
+    set({ "n", "x" }, "ga", mc.addCursorOperator, { desc = "Cursor per line" })
+    set("n", "<C-LeftMouse>", mc.handleMouse)
+    set("n", "<C-LeftDrag>", mc.handleMouseDrag)
+    set("n", "<C-LeftRelease>", mc.handleMouseRelease)
+
+    -- Only active while there are several cursors.
+    mc.addKeymapLayer(function(layerSet)
+      layerSet({ "n", "x" }, "<leader>mx", mc.deleteCursor)
+      layerSet("n", "<Esc>", function()
+        if not mc.cursorsEnabled() then mc.enableCursors() else mc.clearCursors() end
+      end)
+    end)
+  end,
+}`;
+
 const esc = s => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const cap = t => t === '␣' ? '<kbd class="lead">Space</kbd>'
   : t.startsWith('«') ? `<span class="ph">${esc(t.slice(1, -1))}</span>`
@@ -526,6 +573,8 @@ const visuals = {
     <div class="step"><h3>Siguiente coincidencia, como Ctrl+D</h3><div class="ba"><pre>user.id\nuser.name\nuser.age</pre><span>→</span><pre><mark>u</mark>.id\n<mark>u</mark>.name\nuser.age</pre></div>${keys('* cgn «u» Esc .')}</div>
     <div class="step"><h3>Comando en cada línea seleccionada</h3><div class="ba"><pre>foo()\nbar()\nbaz()</pre><span>→</span><pre>foo()<mark>;</mark>\nbar()<mark>;</mark>\nbaz()<mark>;</mark></pre></div><span class="keys">${keys('V j j')}<code class="cmd">:norm A;</code></span></div></div>`,
 
+  mcconfig: () => `<div class="codefile"><header><span>~/.config/nvim/lua/plugins/multicursor.lua</span><button type="button" data-copy>Copiar</button></header><pre>${esc(MC_CONFIG)}</pre></div>`,
+
   anatomy: () => `<div class="anatomy">${[
     [':', 'modo comando'], ['%', 'todo el archivo', '--visual'], ['s', 'sustituir'], ['/viejo', 'qué buscar (admite regex)', '--red'],
     ['/nuevo', 'por qué cambiarlo', '--insert'], ['/g', 'todas las de cada línea', '--normal'], ['c', 'opcional: confirmar una a una', '--command'],
@@ -543,6 +592,13 @@ document.getElementById('sections').innerHTML = S.map(s => `<section id="${s.id}
     ? `<div class="map">${s.rows.map(([l, v, k]) => `<div data-q="${esc(norm(`${l} ${v} ${k}`))}">${keys(v, 'muted')}<span class="arrow">↓</span>${keys(k)}<small>${esc(l)}</small></div>`).join('')}</div>`
     : `<div class="rows">${s.rows.map(row).join('')}</div>`}</section>`).join('');
 document.getElementById('nav').innerHTML = S.map(s => `<a href="#${s.id}">${s.nav}</a>`).join('');
+
+document.addEventListener('click', async e => {
+  const b = e.target.closest('[data-copy]'); if (!b) return;
+  try { await navigator.clipboard.writeText(MC_CONFIG); b.textContent = 'Copiado'; }
+  catch { b.textContent = 'Selecciona y copia a mano'; }
+  setTimeout(() => (b.textContent = 'Copiar'), 2000);
+});
 
 // Filter: hide non-matching rows, subheadings left without rows, and empty sections.
 const q = document.getElementById('q'), empty = document.getElementById('empty');
