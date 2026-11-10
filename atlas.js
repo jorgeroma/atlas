@@ -67,18 +67,15 @@ if (document.documentElement.hasAttribute('data-atlas-routing')) {
   });
 })();
 
-// Reading progress: a thin bar pinned to the bottom edge, guides only (the landing
+// Reading progress: a thin bar pinned to the bottom edge (top edge on mobile, where
+// browser toolbars float over the bottom), guides only (the landing
 // page sits next to this file; guides live one folder down). Colour is --accent;
 // a page whose accent is neutral can set --atlas-scroll on :root instead.
 (() => {
   if (new URL('.', document.currentScript.src).pathname === new URL('.', location.href).pathname) return;
   addEventListener('DOMContentLoaded', () => {
     const style = document.createElement('style');
-    // iOS Safari floats its translucent toolbar over the page and bottom:0 sits above it;
-    // 100lvh reaches the real screen edge behind it. iOS only: on Android Chrome 100lvh
-    // would push the bar off screen while the URL bar is showing.
-    style.textContent = `.atlas-scroll{position:fixed;left:0;right:0;bottom:0;height:4px;z-index:2147483647;pointer-events:none;background:var(--atlas-scroll,var(--accent,currentColor));transform-origin:left;transform:scaleX(0)}
-@supports (-webkit-touch-callout:none) and (height:100lvh){.atlas-scroll{bottom:auto;top:calc(100lvh - 4px)}}`;
+    style.textContent = '.atlas-scroll{position:fixed;left:0;right:0;bottom:0;height:4px;z-index:2147483647;pointer-events:none;background:var(--atlas-scroll,var(--accent,currentColor));transform-origin:left;transform:scaleX(0)}@media (max-width:768px){.atlas-scroll{bottom:auto;top:0}}';
     document.head.append(style);
     const bar = document.createElement('div');
     bar.className = 'atlas-scroll';
