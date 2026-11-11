@@ -49,8 +49,6 @@
 *,*::before,*::after{box-sizing:border-box}
 html{scroll-behavior:smooth;scroll-padding-top:20px}
 body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased}
-/* No opaque sticky header: atlas.js paints the scroll-bar track with the page background so iOS Safari tints the notch area. */
-:root{--atlas-scroll-track:var(--paper)}
 a{color:var(--accent);text-underline-offset:3px}
 a:hover{text-decoration-thickness:2px}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
@@ -221,9 +219,21 @@ footer.end{color:var(--muted);font-size:.85rem;padding-top:8px}
   html{scroll-behavior:auto}
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
+
+/* Mobile header: an opaque sticky bar at the top so iOS Safari fills the notch area
+   with its colour (as in the LazyVim guide) and the scroll bar sits on its top edge. */
+.mhead{display:none}
+@media (max-width:768px){
+  .mhead{display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:20;height:48px;padding:env(safe-area-inset-top,0px) 16px 0;background:var(--surface);border-bottom:1px solid var(--line);color:var(--ink);font-weight:700;font-size:15px}
+  html{scroll-padding-top:60px}
+  .mhead-theme{margin-left:auto}
+  .mhead .theme-toggle{width:34px;height:34px;font-size:16px}
+  .rail .brand{display:none}
+}
 </style>
 </head>
 <body>
+<header class="mhead"><span class="brand-mark">ops</span>Proyecto DevOps<span class="mhead-theme" data-atlas-theme></span></header>
 <div class="shell">
 <aside class="rail" aria-label="Índice del proyecto">
   <div class="brand"><span class="brand-mark">ops</span>Proyecto DevOps<span class="theme-slot" data-atlas-theme></span></div>

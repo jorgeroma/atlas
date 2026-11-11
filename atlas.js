@@ -38,55 +38,55 @@ if (document.documentElement.hasAttribute('data-atlas-routing')) {
 
   addEventListener('DOMContentLoaded', () => {
     // Each page places the button by providing an element with [data-atlas-theme];
-    // without one there is no button, but the saved theme still applies.
-    const slot = document.querySelector('[data-atlas-theme]');
-    if (!slot) return;
+    // without one there is no button, but the saved theme still applies. A page may
+    // give several slots (e.g. desktop and mobile headers) and hide all but one in CSS.
+    const slots = document.querySelectorAll('[data-atlas-theme]');
+    if (!slots.length) return;
     const style = document.createElement('style');
     // Each page names its tokens differently; the fallbacks cover all of them.
     style.textContent = `.theme-toggle{flex:none;width:40px;height:40px;padding:0;display:grid;place-items:center;border-radius:50%;border:1px solid var(--line);background:var(--surface,var(--card));color:var(--ink,var(--fg));font:18px/1 system-ui,sans-serif;cursor:pointer}.theme-toggle:hover{border-color:var(--accent)}.theme-toggle:focus-visible{outline:2px solid var(--accent);outline-offset:2px}`;
     document.head.append(style);
 
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'theme-toggle';
+    const btns = [...slots].map(slot => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'theme-toggle';
+      btn.addEventListener('click', () => {
+        const next = isDark() ? 'light' : 'dark';
+        root.dataset.theme = next;
+        document.cookie = `atlas-theme=${next}; path=${path}; max-age=31536000; SameSite=Lax`;
+        paint();
+      });
+      slot.append(btn);
+      return btn;
+    });
     const paint = () => {
       const dark = isDark();
-      btn.textContent = dark ? '☀' : '☾';
-      btn.title = dark ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro';
-      btn.setAttribute('aria-label', btn.title);
+      for (const btn of btns) {
+        btn.textContent = dark ? '☀' : '☾';
+        btn.title = dark ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro';
+        btn.setAttribute('aria-label', btn.title);
+      }
     };
-    btn.addEventListener('click', () => {
-      const next = isDark() ? 'light' : 'dark';
-      root.dataset.theme = next;
-      document.cookie = `atlas-theme=${next}; path=${path}; max-age=31536000; SameSite=Lax`;
-      paint();
-    });
     osDark.addEventListener('change', paint);
     paint();
-    slot.append(btn);
   });
 })();
 
 // Reading progress: a thin bar pinned to the bottom edge (top edge on mobile, where
-// browser toolbars float over the bottom), guides only (the landing page sits next
-// to this file; guides live one folder down). Fill colour is --accent; a page whose
-// accent is neutral can set --atlas-scroll on :root instead.
-// On mobile, iOS Safari tints its status bar with the background of a full-width
-// fixed element at the top edge; it ignores elements under ~11px tall, so on mobile the
-// track is 12px with 8px above the screen. Pages without an opaque sticky header set
-// --atlas-scroll-track to their background so the notch area is not see-through.
+// browser toolbars float over the bottom), guides only (the landing
+// page sits next to this file; guides live one folder down). Colour is --accent;
+// a page whose accent is neutral can set --atlas-scroll on :root instead.
 (() => {
   if (new URL('.', document.currentScript.src).pathname === new URL('.', location.href).pathname) return;
   addEventListener('DOMContentLoaded', () => {
     const style = document.createElement('style');
-    style.textContent = '.atlas-scroll{position:fixed;left:0;right:0;bottom:0;height:4px;z-index:2147483647;pointer-events:none}.atlas-scroll>i{display:block;height:100%;background:var(--atlas-scroll,var(--accent,currentColor));transform-origin:left;transform:scaleX(0)}@media (max-width:768px){.atlas-scroll{bottom:auto;top:-8px;height:12px;background:var(--atlas-scroll-track,transparent)}.atlas-scroll>i{margin-top:8px;height:4px}}';
+    style.textContent = '.atlas-scroll{position:fixed;left:0;right:0;bottom:0;height:4px;z-index:2147483647;pointer-events:none;background:var(--atlas-scroll,var(--accent,currentColor));transform-origin:left;transform:scaleX(0)}@media (max-width:768px){.atlas-scroll{bottom:auto;top:0}}';
     document.head.append(style);
-    const track = document.createElement('div');
-    track.className = 'atlas-scroll';
-    track.setAttribute('aria-hidden', 'true');
-    const bar = document.createElement('i');
-    track.append(bar);
-    document.body.append(track);
+    const bar = document.createElement('div');
+    bar.className = 'atlas-scroll';
+    bar.setAttribute('aria-hidden', 'true');
+    document.body.append(bar);
     let queued = false;
     const update = () => {
       queued = false;
