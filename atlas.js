@@ -72,13 +72,14 @@ if (document.documentElement.hasAttribute('data-atlas-routing')) {
 // to this file; guides live one folder down). Fill colour is --accent; a page whose
 // accent is neutral can set --atlas-scroll on :root instead.
 // On mobile, iOS Safari tints its status bar with the background of a full-width
-// fixed element at the top edge. Pages without an opaque sticky header set
+// fixed element at the top edge; it ignores elements under ~11px tall, so on mobile the
+// track is 12px with 8px above the screen. Pages without an opaque sticky header set
 // --atlas-scroll-track to their background so the notch area is not see-through.
 (() => {
   if (new URL('.', document.currentScript.src).pathname === new URL('.', location.href).pathname) return;
   addEventListener('DOMContentLoaded', () => {
     const style = document.createElement('style');
-    style.textContent = '.atlas-scroll{position:fixed;left:0;right:0;bottom:0;height:4px;z-index:2147483647;pointer-events:none}.atlas-scroll>i{display:block;height:100%;background:var(--atlas-scroll,var(--accent,currentColor));transform-origin:left;transform:scaleX(0)}@media (max-width:768px){.atlas-scroll{bottom:auto;top:0;background:var(--atlas-scroll-track,transparent)}}';
+    style.textContent = '.atlas-scroll{position:fixed;left:0;right:0;bottom:0;height:4px;z-index:2147483647;pointer-events:none}.atlas-scroll>i{display:block;height:100%;background:var(--atlas-scroll,var(--accent,currentColor));transform-origin:left;transform:scaleX(0)}@media (max-width:768px){.atlas-scroll{bottom:auto;top:-8px;height:12px;background:var(--atlas-scroll-track,transparent)}.atlas-scroll>i{margin-top:8px;height:4px}}';
     document.head.append(style);
     const track = document.createElement('div');
     track.className = 'atlas-scroll';
